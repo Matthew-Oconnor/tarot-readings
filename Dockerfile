@@ -1,10 +1,6 @@
 FROM node:23.5-alpine3.20
 WORKDIR /usr/local/app
 
-# Setup an app user so the container doesn't run as the root user
-# RUN useradd app
-# USER app
-
 # Copy in the source code
 COPY public ./public
 COPY src ./src

@@ -31,9 +31,31 @@ app.post('/api/openai', async (req, res) => {
     const aiResponse = response.data.choices[0].message.content.trim();
     res.json({ response: aiResponse });
   } catch (error) {
-    console.error('Error communicating with our Psychic:', error.message);
-    res.status(500).json({ error: 'Error communicating with our Psychic' });
-  }
+    if (error.response) {
+      console.error(
+        `Psychic API returned ${error.response.status}:`,
+        error.response.data ?? error.response.statusText
+      );
+      // Mirror the downstream status and message
+      return res
+        .status(error.response.status)
+        .json({ error: error.response.data || error.response.statusText });
+    }
+
+    // 2. The request was made but no response was received
+    if (error.request) {
+      console.error('No response from Psychic API:', error.request);
+      return res
+        .status(502) // Bad Gateway
+        .json({ error: 'No response from Psychic service' });
+    }
+
+    // 3. Something went wrong setting up the request (e.g. bad URL, config error)
+    console.error('Error constructing request to Psychic:', error.message);
+    return res
+      .status(500)
+      .json({ error: 'Internal server error' });
+    }
 });
 
 app.listen(port, () => {

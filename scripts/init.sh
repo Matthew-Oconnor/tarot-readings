@@ -1,2 +1,2 @@
-npm start &
-node backend/server.js
+node backend/server.js &
+npm start
