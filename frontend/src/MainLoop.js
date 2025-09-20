@@ -42,7 +42,7 @@ const MainLoop = () => {
   
     setTimeout(async () => {
       try {
-        const res = await axios.post('http://localhost:5001/api/psychic/intro', {
+        const res = await axios.post('/api/psychic/intro', {
         });
         setResponseText(res.data.response);
       } catch (error) {

@@ -55,7 +55,7 @@ const ClassicSpread = () => {
 
   const generateSpreadInterpretation = async () => {
     try {
-      const res = await axios.post('http://localhost:5001/api/psychic/spread', {
+      const res = await axios.post('/api/psychic/spread', {
         cards: selectedCards,
       });
       setResponseText(res.data.response);
