@@ -1,0 +1,25 @@
+.Response-container {
+  background-color: #00026e; /* Dark purple background */
+  border-radius: 12px; /* Rounded corners */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Subtle shadow */
+  box-sizing: border-box;
+  width: 900px; /* Prevents over-expansion on large screens */
+  max-width: 90%; /* Ensures it remains responsive on smaller screens */
+  margin: 20px auto; /* Centers the container */
+  padding: 20px 40px;
+  text-align: left;
+  transition: opacity 1s ease-in-out;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #ffffff; /* Ensures text is readable */
+  opacity: 0; /* Initial state for fade-in */
+  overflow-wrap: break-word; /* Prevents long words from overflowing */
+}
+
+.fade-in {
+  opacity: 1;
+}
+
+.fade-out {
+  opacity: 0;
+}

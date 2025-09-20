@@ -1,0 +1,30 @@
+.Welcome-button {
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #601575, #2b2e6e);
+  color: white;
+  cursor: pointer;
+  height: min(50vw, 50vh);
+  width: min(50vw, 50vh);
+  font-size: min(4vw, 4vh);
+  font-family: 'Courier', monospace;
+  transition: transform 0.3s ease, opacity 1s ease-in;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  opacity: 0; /* Initial state for fade-in */
+}
+
+.fade-in {
+  opacity: 1;
+}
+
+.fade-out {
+  opacity: 0;
+}
+
+.Welcome-button:hover {
+  transform: scale(1.2);  /* Slightly enlarges on hover */
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);  /* Adds shadow effect on hover */
+}

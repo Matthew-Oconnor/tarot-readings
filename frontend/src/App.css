@@ -1,0 +1,30 @@
+.App {
+  text-align: center;
+  font-size: 48px;
+  font-family: Arial, sans-serif;
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+.fade-in {
+  opacity: 1; /* Fully visible */
+  transition: opacity 0.5s ease-in;
+}
+
+.fade-out {
+  opacity: 0; /* Faded out */
+  transition: opacity 0.5s ease-out;
+}
