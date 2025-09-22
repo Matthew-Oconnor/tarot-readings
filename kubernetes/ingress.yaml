@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tarot-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: tarot.localdev.test
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: tarot-backend-service
+            port:
+              name: backend
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: tarot-frontend-service
+            port:
+              name: frontend
+  # Optional TLS
+  # tls:
+  # - hosts:
+  #   - tarot.localdev.test
+  #   secretName: tarot-tls

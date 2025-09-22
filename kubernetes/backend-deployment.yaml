@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tarot-backend-deployment
+  labels:
+    app: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: test-backend
+        image: zaptapped/my-first-container:v2.0.3
+        ports:
+          - name: backend
+            containerPort: 5001
+      imagePullSecrets:
+        - name: regcred
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: tarot-backend-service
+spec:
+  selector:
+    app: backend
+  ports:
+  - name: backend
+    port: 5001
+    targetPort: 5001

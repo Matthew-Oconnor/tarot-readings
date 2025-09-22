@@ -1,17 +1,15 @@
 FROM node:23.5-alpine3.20
 WORKDIR /usr/local/app
 
-# Copy in the source code
-COPY public ./public
-COPY src ./src
+COPY . ./backend
+COPY .env ./.env
 COPY package.json package.json
 COPY package-lock.json package-lock.json
 
-EXPOSE 3000
+EXPOSE 5001
 
 # # Install the application dependencies
 RUN apk add npm
 RUN npm install
-RUN npm run build
 
-CMD ["npm", "start"]
+CMD [ "node", "backend/server.js" ]
