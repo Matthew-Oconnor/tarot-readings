@@ -1,20 +1,25 @@
 // ResponseContainer.js
-import React from 'react';
+import React, { memo } from 'react';
 import Typewriter from './Typewriter';
-import './ResponseContainer.css'; // Import corresponding CSS
+import './ResponseContainer.css';
 
-const SPEED_RANGE = [15, 60];
+const SPEED_RANGE = [5, 40];
 
 const ResponseContainer = ({ text, fade, onTypingComplete }) => {
+  const safeText = typeof text === 'string' ? text : '';
+
   return (
     <div className={`Response-container ${fade ? 'fade-in' : 'fade-out'}`}>
-      <Typewriter 
-        text={text}
-        speedRange={SPEED_RANGE}
-        onComplete={onTypingComplete} // Pass callback to Typewriter
-      />
+      {safeText !== '' && (
+        <Typewriter
+          text={safeText}
+          speedRange={SPEED_RANGE}
+          onComplete={onTypingComplete}
+        />
+      )}
     </div>
   );
 };
 
-export default ResponseContainer;
+// prevent re-renders if props are identical
+export default memo(ResponseContainer);

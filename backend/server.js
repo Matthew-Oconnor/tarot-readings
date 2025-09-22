@@ -84,13 +84,13 @@ app.post('/api/psychic/spread', async (req, res) => {
 
     const response = await axios.post(
       `${OPENAI_BASE_URL}/chat/completions`,
-      { model: OPENAI_MODEL, messages, temperature: 0.8, max_tokens: 350 },
+      { model: OPENAI_MODEL, messages, temperature: 0.8, max_tokens: 900 },
       {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${OPENAI_API_KEY}`,
         },
-        timeout: 25_000,
+        timeout: 75_000,
       }
     );
 

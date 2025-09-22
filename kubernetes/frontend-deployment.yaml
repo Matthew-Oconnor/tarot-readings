@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: test-frontend
-        image: zaptapped/tarot-frontend:v0.0.5
+        image: zaptapped/tarot-frontend:v0.0.13
         ports:
           - name: frontend
             containerPort: 3000
@@ -34,5 +34,5 @@ spec:
     app: frontend
   ports:
   - name: frontend
-    port: 3000
-    targetPort: 3000
+    port: 80
+    targetPort: 80

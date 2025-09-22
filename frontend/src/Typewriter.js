@@ -1,51 +1,51 @@
-import React, { useState, useEffect } from 'react';
+// Typewriter.jsx
+import React, { useEffect, useRef, useState } from 'react';
 import './Typewriter.css';
 
-const Typewriter = ({ text, speedRange, onComplete }) => {
-  const [displayedText, setDisplayedText] = useState('');
-  const [isCompleted, setIsCompleted] = useState(false);
+const Typewriter = ({ text = '', speedRange = [5, 40], onComplete }) => {
+  const [displayed, setDisplayed] = useState('');
+  const iRef = useRef(0);
+  const tRef = useRef(null);
+  const doneRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+
+  // keep latest callback without retriggering the typing effect
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
-    let index = 0;
-    let isCancelled = false;
+    iRef.current = 0;
+    doneRef.current = false;
+    setDisplayed('');
 
-    // Reset state when `text` changes
-    setDisplayedText(text.charAt(index));
-    setIsCompleted(false);
+    let cancelled = false;
 
-    const typeNextCharacter = () => {
-      if (isCancelled) return;
+    const step = () => {
+      if (cancelled) return;
 
-      if (index < text.length) {
-        setDisplayedText((prev) => prev + text.charAt(index));
-        index++;
+      if (iRef.current < text.length) {
+        iRef.current += 1;
+        setDisplayed(text.slice(0, iRef.current)); // derive prefix (no concat drift)
+
         const [min, max] = speedRange;
-        const randomDelay = Math.floor(Math.random() * (max - min + 1)) + min;
-        setTimeout(typeNextCharacter, randomDelay);
-      } else {
-        setIsCompleted(true);
+        const delay = Math.floor(Math.random() * (max - min + 1)) + min;
+        tRef.current = setTimeout(step, delay);
+      } else if (!doneRef.current) {
+        doneRef.current = true;
+        onCompleteRef.current?.();
       }
     };
 
-    typeNextCharacter();
+    step();
 
     return () => {
-      isCancelled = true;
+      cancelled = true;
+      if (tRef.current) clearTimeout(tRef.current);
     };
-  }, [text, speedRange]);
+  }, [text, speedRange]); // ← no onComplete here
 
-  useEffect(() => {
-    if (isCompleted && text.length > 0) {
-      console.log("typewriter is handling")
-      onComplete(); // Invoke callback only when typing is fully complete
-    }
-  }, [isCompleted]);
-
-  return (
-    <div>
-      <p className="Typewriter-text">{displayedText}</p>
-    </div>
-  );
+  return <p className="Typewriter-text">{displayed}</p>;
 };
 
 export default Typewriter;

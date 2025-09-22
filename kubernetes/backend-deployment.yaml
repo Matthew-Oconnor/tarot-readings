@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: test-backend
-        image: zaptapped/my-first-container:v2.0.3
+        image: zaptapped/my-first-container:v2.0.4
         ports:
           - name: backend
             containerPort: 5001
