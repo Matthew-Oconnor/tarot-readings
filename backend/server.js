@@ -31,7 +31,7 @@ app.post('/api/psychic/intro', async (req, res) => {
       }
     );
 
-    const aiResponse = response?.data?.choices?.[0]?.message?.content?.trim() ?? '';
+    const aiResponse = (response?.data?.response ?? '').trim();
     return res.json({ response: aiResponse });
   } catch (error) {
     // 1) Downstream responded with error
@@ -90,7 +90,7 @@ app.post('/api/psychic/spread', async (req, res) => {
       }
     );
 
-    const aiResponse = response?.data?.choices?.[0]?.message?.content?.trim() ?? '';
+    const aiResponse = (response?.data?.response ?? '').trim();
 
     // Optional: if you want to return resolved names/positions to the UI,
     // uncomment the import above and the next line:
