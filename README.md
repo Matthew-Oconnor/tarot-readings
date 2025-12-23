@@ -4,11 +4,17 @@ Make sure your environment has npm and Node.js before doing any work so that you
 
 If you are missing any npm dependencies, you can run `npm install` from the root project directory. There are two `package.json` files that contain the dependencies.
 
-There is a backend script that is required to make API requests on your behalf. 
-This backend server will make calls to OpenAI, so you will need to create a `.env` file and provide your OpenAI API key.
-You can create this file by running the following command from the root project directory with your API key.
+There is a backend script that is required to make API requests on your behalf.
+This backend server calls Simphoni's apex-01 LLM, so create a `.env` file to point at the API and model.
+You can create this file by running the following command from the root project directory.
 
-`echo OPENAI_API_KEY=<your-api-key-here> > .env`
+```
+cat <<'EOF' > .env
+SIMPHONI_API_BASE_URL=https://simphoni-api.ngrok.app
+SIMPHONI_MODEL=gpt-oss:20b
+SIMPHONI_TIMEOUT_MS=120000
+EOF
+```
 
 Start the backend server from the root project directory.
 
