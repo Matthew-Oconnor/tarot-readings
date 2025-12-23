@@ -1,59 +1,143 @@
 require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
-const { introPrompt } = require('./templates/psychic')
-const { psychicSpread } = require('./templates/spread')
+
+const { introPrompt } = require('./templates/psychic');
+const { psychicSpread } = require('./templates/spread');
+
 const app = express();
 const port = process.env.PORT || 5001;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const OPENAI_MODEL = process.env.OPENAI_MODEL || 'tinyllama';
-const OPENAI_BASE_URL = process.env.OPENAI_BASE_URL || 'http://192.168.1.10:11434';
 
-if (!OPENAI_API_KEY) {
-  console.warn('[WARN] OPENAI_API_KEY is not set. Requests will fail.');
-}
+// These names are “OPENAI_*” but you’re actually targeting Ollama.
+// Keep env names for compatibility, but treat them as OLLAMA_*.
+const MODEL = process.env.OPENAI_MODEL || 'tinyllama';
+const OLLAMA_BASE_URL = (process.env.OPENAI_BASE_URL || 'http://192.168.1.10:11434').replace(/\/$/, '');
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
+
+/**
+ * Turn chat-style messages into a single prompt string for /api/generate.
+ * This keeps your template system intact even if it produces messages arrays.
+ */
+function messagesToPrompt(messages) {
+  if (!Array.isArray(messages)) return String(messages || '');
+
+  return messages
+    .map((m) => {
+      const role = (m?.role || 'user').toUpperCase();
+      const content = typeof m?.content === 'string' ? m.content : JSON.stringify(m?.content ?? '');
+      return `${role}: ${content}`;
+    })
+    .join('\n')
+    .concat('\nASSISTANT:');
+}
+
+/**
+ * Call Ollama in a non-streaming way and return a clean text response.
+ *
+ * Uses /api/chat if you provide messages.
+ * Falls back to /api/generate by converting messages -> prompt.
+ */
+async function ollamaRequest({ model, messages, prompt, options }) {
+  const client = axios.create({
+    baseURL: OLLAMA_BASE_URL,
+    timeout: 60_000,
+    headers: { 'Content-Type': 'application/json' },
+    // Don’t throw automatically so we can print body on non-2xx.
+    validateStatus: () => true,
+  });
+
+  // Prefer chat if messages provided.
+  if (Array.isArray(messages)) {
+    const r = await client.post('/api/chat', {
+      model,
+      messages,
+      stream: false, // IMPORTANT: otherwise you get NDJSON streaming
+      options: options || undefined,
+    });
+
+    if (r.status < 200 || r.status >= 300) {
+      const detail = r.data || r.statusText;
+      const err = new Error(`Ollama /api/chat failed: ${r.status}`);
+      err.status = r.status;
+      err.detail = detail;
+      throw err;
+    }
+
+    // Ollama chat response shape: { message: { role, content }, done, ... }
+    const text = (r.data?.message?.content ?? '').trim();
+    return { text, raw: r.data, mode: 'chat' };
+  }
+
+  // Generate mode.
+  const finalPrompt = typeof prompt === 'string' ? prompt : messagesToPrompt(messages);
+  const r = await client.post('/api/generate', {
+    model,
+    prompt: finalPrompt,
+    stream: false, // IMPORTANT
+    options: options || undefined,
+  });
+
+  if (r.status < 200 || r.status >= 300) {
+    const detail = r.data || r.statusText;
+    const err = new Error(`Ollama /api/generate failed: ${r.status}`);
+    err.status = r.status;
+    err.detail = detail;
+    throw err;
+  }
+
+  // Ollama generate response shape: { response: "...", done, ... }
+  const text = (r.data?.response ?? '').trim();
+  return { text, raw: r.data, mode: 'generate' };
+}
+
+/**
+ * Unified error responder.
+ */
+function sendDownstreamError(res, err, context = {}) {
+  const status = err.status && Number.isInteger(err.status) ? err.status : 502;
+
+  // Log something actually useful
+  console.error('[DownstreamError]', {
+    status,
+    message: err.message,
+    detail: err.detail,
+    ...context,
+  });
+
+  return res.status(status).json({
+    error: 'Language service error',
+    status,
+    message: err.message,
+    detail: err.detail,
+  });
+}
 
 app.post('/api/psychic/intro', async (req, res) => {
-  const messages = introPrompt({});
-
   try {
-    const response = await axios.post(
-      `${OPENAI_BASE_URL}/api/generate`,
-      { model: OPENAI_MODEL, messages },
-      {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+    // Your template returns messages; use /api/chat if possible.
+    const messages = introPrompt({});
 
-    const aiResponse = (response?.data?.response ?? '').trim();
-    return res.json({ response: aiResponse });
-  } catch (error) {
-    // 1) Downstream responded with error
-    if (error.response) {
-      console.error(
-        `OpenAI error ${error.response.status}:`,
-        error.response.data ?? error.response.statusText
-      );
-      return res
-        .status(error.response.status)
-        .json({ error: error.response.data || error.response.statusText });
-    }
+    const { text, mode, raw } = await ollamaRequest({
+      model: MODEL,
+      messages,
+      // You can set generation options here if desired:
+      // options: { temperature: 0.7 }
+    });
 
-    // 2) No response
-    if (error.request) {
-      console.error('No response from OpenAI:', error.request);
-      return res.status(502).json({ error: 'No response from language service' });
-    }
-
-    // 3) Setup error
-    console.error('Request construction error:', error.message);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.json({
+      response: text,
+      meta: {
+        model: raw?.model ?? MODEL,
+        mode,
+        done: raw?.done ?? true,
+      },
+    });
+  } catch (err) {
+    return sendDownstreamError(res, err, { route: '/api/psychic/intro' });
   }
 });
 
@@ -61,18 +145,15 @@ app.post('/api/psychic/spread', async (req, res) => {
   try {
     const { cards = [], tone = 'warm' } = req.body || {};
 
-    // Basic validation
     if (!Array.isArray(cards) || cards.length === 0) {
       return res.status(400).json({ error: '`cards` must be a non-empty array.' });
     }
 
-    // Normalize first three cards
     const normalized = cards.slice(0, 3).map((c) => ({
       number: Number(c?.number),
       inverted: !!c?.inverted,
     }));
 
-    // Validate numbers
     const bad = normalized.find((c) => Number.isNaN(c.number));
     if (bad) {
       return res.status(400).json({ error: 'Each card must include a numeric `number`.' });
@@ -80,40 +161,36 @@ app.post('/api/psychic/spread', async (req, res) => {
 
     const messages = psychicSpread({ cards: normalized, tone });
 
-    const response = await axios.post(
-      `${OPENAI_BASE_URL}/chat/completions`,
-      { model: OPENAI_MODEL, messages },
-      {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    const aiResponse = (response?.data?.response ?? '').trim();
-
-    // Optional: if you want to return resolved names/positions to the UI,
-    // uncomment the import above and the next line:
-    // const resolved = resolveCards(normalized);
+    const { text, mode, raw } = await ollamaRequest({
+      model: MODEL,
+      messages,
+      // options: { temperature: 0.8, top_p: 0.9 }
+    });
 
     return res.json({
-      response: aiResponse,
+      response: text,
       used: { cards: normalized },
+      meta: {
+        model: raw?.model ?? MODEL,
+        mode,
+        done: raw?.done ?? true,
+        done_reason: raw?.done_reason,
+        eval_count: raw?.eval_count,
+        total_duration: raw?.total_duration,
+      },
     });
-  } catch (error) {
-    if (error.response) {
-      console.error(`OpenAI error ${error.response.status}:`, error.response.data ?? error.response.statusText);
-      return res.status(error.response.status).json({ error: error.response.data || error.response.statusText });
-    }
-    if (error.request) {
-      console.error('No response from OpenAI:', error.request);
-      return res.status(502).json({ error: 'No response from language service' });
-    }
-    console.error('Request construction error:', error.message);
-    return res.status(500).json({ error: 'Internal server error' });
+  } catch (err) {
+    return sendDownstreamError(res, err, { route: '/api/psychic/spread' });
   }
+});
+
+app.get('/healthz', async (req, res) => {
+  // lightweight health check (doesn't require the model to run)
+  return res.json({ ok: true, ollama: OLLAMA_BASE_URL, model: MODEL });
 });
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
+  console.log(`Ollama base: ${OLLAMA_BASE_URL}`);
+  console.log(`Model: ${MODEL}`);
 });
