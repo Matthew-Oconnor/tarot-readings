@@ -13,7 +13,7 @@ const port = process.env.PORT || 5001;
 // These names are “OPENAI_*” but you’re actually targeting Ollama.
 // Keep env names for compatibility, but treat them as OLLAMA_*.
 const MODEL = process.env.OPENAI_MODEL || 'tinyllama';
-const OLLAMA_BASE_URL = (process.env.OPENAI_BASE_URL || 'http://192.168.1.10:11434').replace(/\/$/, '');
+const OLLAMA_BASE_URL = (process.env.OPENAI_BASE_URL || 'http://itworksonmymachine:11434').replace(/\/$/, '');
 
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
