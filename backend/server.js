@@ -7,8 +7,8 @@ const { psychicSpread } = require('./templates/spread')
 const app = express();
 const port = process.env.PORT || 5001;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
-const OPENAI_BASE_URL = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'tinyllama';
+const OPENAI_BASE_URL = process.env.OPENAI_BASE_URL || 'http://192.168.1.10:11434';
 
 if (!OPENAI_API_KEY) {
   console.warn('[WARN] OPENAI_API_KEY is not set. Requests will fail.');
@@ -22,14 +22,12 @@ app.post('/api/psychic/intro', async (req, res) => {
 
   try {
     const response = await axios.post(
-      `${OPENAI_BASE_URL}/chat/completions`,
-      { model: OPENAI_MODEL, messages, temperature: 0.8, max_tokens: 220 },
+      `${OPENAI_BASE_URL}/api/generate`,
+      { model: OPENAI_MODEL, messages },
       {
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-        },
-        timeout: 25_000,
+          'Content-Type': 'application/json'
+        }
       }
     );
 
@@ -84,13 +82,11 @@ app.post('/api/psychic/spread', async (req, res) => {
 
     const response = await axios.post(
       `${OPENAI_BASE_URL}/chat/completions`,
-      { model: OPENAI_MODEL, messages, temperature: 0.8, max_tokens: 900 },
+      { model: OPENAI_MODEL, messages },
       {
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-        },
-        timeout: 75_000,
+          'Content-Type': 'application/json'
+        }
       }
     );
 
