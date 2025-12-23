@@ -1,0 +1,392 @@
+[
+  {
+    "number": 1,
+    "name": "The Fool",
+    "description": "Represents new beginnings, spontaneity, and a free spirit embarking on a journey."
+  },
+  {
+    "number": 2,
+    "name": "The Magician",
+    "description": "Symbolizes skill, power, and the ability to manifest desires through will and action."
+  },
+  {
+    "number": 3,
+    "name": "The High Priestess",
+    "description": "Embodies intuition, mystery, and the subconscious mind's wisdom."
+  },
+  {
+    "number": 4,
+    "name": "The Empress",
+    "description": "Represents fertility, abundance, and nurturing energy."
+  },
+  {
+    "number": 5,
+    "name": "The Emperor",
+    "description": "Symbolizes authority, structure, and control."
+  },
+  {
+    "number": 6,
+    "name": "The Hierophant",
+    "description": "Embodies tradition, spirituality, and conformity to societal norms."
+  },
+  {
+    "number": 7,
+    "name": "The Lovers",
+    "description": "Represents relationships, love, and meaningful connections."
+  },
+  {
+    "number": 8,
+    "name": "The Chariot",
+    "description": "Symbolizes determination, victory, and overcoming obstacles through willpower."
+  },
+  {
+    "number": 9,
+    "name": "Strength",
+    "description": "Embodies courage, patience, and inner strength."
+  },
+  {
+    "number": 10,
+    "name": "The Hermit",
+    "description": "Represents introspection, solitude, and the search for inner truth."
+  },
+  {
+    "number": 11,
+    "name": "Wheel of Fortune",
+    "description": "Symbolizes change, cycles, and the ebb and flow of life's events."
+  },
+  {
+    "number": 12,
+    "name": "Justice",
+    "description": "Embodies fairness, truth, and the consequences of actions."
+  },
+  {
+    "number": 13,
+    "name": "The Hanged Man",
+    "description": "Represents suspension, letting go, and seeing things from a different perspective."
+  },
+  {
+    "number": 14,
+    "name": "Death",
+    "description": "Symbolizes transformation, endings, and new beginnings through change."
+  },
+  {
+    "number": 15,
+    "name": "Temperance",
+    "description": "Embodies balance, moderation, and the blending of opposites."
+  },
+  {
+    "number": 16,
+    "name": "The Devil",
+    "description": "Represents temptation, materialism, and being bound by limitations."
+  },
+  {
+    "number": 17,
+    "name": "The Tower",
+    "description": "Symbolizes sudden upheaval, revelation, and the breaking down of old structures."
+  },
+  {
+    "number": 18,
+    "name": "The Star",
+    "description": "Embodies hope, inspiration, and a sense of renewal."
+  },
+  {
+    "number": 19,
+    "name": "The Moon",
+    "description": "Represents illusion, fear, and the subconscious."
+  },
+  {
+    "number": 20,
+    "name": "The Sun",
+    "description": "Symbolizes joy, success, and vitality."
+  },
+  {
+    "number": 21,
+    "name": "Judgment",
+    "description": "Embodies reflection, reckoning, and awakening."
+  },
+  {
+    "number": 22,
+    "name": "The World",
+    "description": "Represents completion, fulfillment, and the achievement of goals."
+  },
+  {
+    "number": 23,
+    "name": "Ace of Wands",
+    "description": "Symbolizes new opportunities, creativity, and the spark of inspiration."
+  },
+  {
+    "number": 24,
+    "name": "Two of Wands",
+    "description": "Represents planning, making decisions, and considering future possibilities."
+  },
+  {
+    "number": 25,
+    "name": "Three of Wands",
+    "description": "Embodies expansion, growth, and the anticipation of rewards."
+  },
+  {
+    "number": 26,
+    "name": "Four of Wands",
+    "description": "Symbolizes celebration, harmony, and successful completion of projects."
+  },
+  {
+    "number": 27,
+    "name": "Five of Wands",
+    "description": "Represents conflict, competition, and challenges that foster growth."
+  },
+  {
+    "number": 28,
+    "name": "Six of Wands",
+    "description": "Embodies victory, recognition, and public acknowledgment of achievements."
+  },
+  {
+    "number": 29,
+    "name": "Seven of Wands",
+    "description": "Symbolizes perseverance, defending beliefs, and standing one's ground."
+  },
+  {
+    "number": 30,
+    "name": "Eight of Wands",
+    "description": "Represents swift action, movement, and the rapid progression of events."
+  },
+  {
+    "number": 31,
+    "name": "Nine of Wands",
+    "description": "Embodies resilience, persistence, and maintaining boundaries despite challenges."
+  },
+  {
+    "number": 32,
+    "name": "Ten of Wands",
+    "description": "Symbolizes burden, responsibility, and the weight of obligations."
+  },
+  {
+    "number": 33,
+    "name": "Page of Wands",
+    "description": "Represents enthusiasm, exploration, and the pursuit of new ideas."
+  },
+  {
+    "number": 34,
+    "name": "Knight of Wands",
+    "description": "Embodies action, adventure, and a passionate drive towards goals."
+  },
+  {
+    "number": 35,
+    "name": "Queen of Wands",
+    "description": "Symbolizes confidence, warmth, and the nurturing of creative endeavors."
+  },
+  {
+    "number": 36,
+    "name": "King of Wands",
+    "description": "Represents leadership, vision, and the ability to inspire others."
+  },
+  {
+    "number": 37,
+    "name": "Ace of Cups",
+    "description": "Symbolizes emotional fulfillment, new relationships, and spiritual nourishment."
+  },
+  {
+    "number": 38,
+    "name": "Two of Cups",
+    "description": "Represents partnership, mutual attraction, and harmonious relationships."
+  },
+  {
+    "number": 39,
+    "name": "Three of Cups",
+    "description": "Embodies celebration, friendship, and community gatherings."
+  },
+  {
+    "number": 40,
+    "name": "Four of Cups",
+    "description": "Symbolizes contemplation, apathy, and reassessing emotional needs."
+  },
+  {
+    "number": 41,
+    "name": "Five of Cups",
+    "description": "Represents loss, regret, and focusing on what has gone wrong."
+  },
+  {
+    "number": 42,
+    "name": "Six of Cups",
+    "description": "Embodies nostalgia, memories, and revisiting the past."
+  },
+  {
+    "number": 43,
+    "name": "Seven of Cups",
+    "description": "Symbolizes choices, illusions, and the overwhelming of possibilities."
+  },
+  {
+    "number": 44,
+    "name": "Eight of Cups",
+    "description": "Represents moving on, seeking deeper meaning, and abandoning what no longer serves."
+  },
+  {
+    "number": 45,
+    "name": "Nine of Cups",
+    "description": "Embodies satisfaction, contentment, and the fulfillment of desires."
+  },
+  {
+    "number": 46,
+    "name": "Ten of Cups",
+    "description": "Symbolizes happiness, emotional bliss, and harmonious family life."
+  },
+  {
+    "number": 47,
+    "name": "Page of Cups",
+    "description": "Represents creativity, intuition, and the beginnings of emotional journeys."
+  },
+  {
+    "number": 48,
+    "name": "Knight of Cups",
+    "description": "Embodies romance, idealism, and the pursuit of emotional connections."
+  },
+  {
+    "number": 49,
+    "name": "Queen of Cups",
+    "description": "Symbolizes empathy, compassion, and emotional intelligence."
+  },
+  {
+    "number": 50,
+    "name": "King of Cups",
+    "description": "Represents emotional balance, wisdom, and the mastery of emotions."
+  },
+  {
+    "number": 51,
+    "name": "Ace of Swords",
+    "description": "Symbolizes clarity, breakthroughs, and the power of intellect."
+  },
+  {
+    "number": 52,
+    "name": "Two of Swords",
+    "description": "Represents indecision, blocked emotions, and the need to make difficult choices."
+  },
+  {
+    "number": 53,
+    "name": "Three of Swords",
+    "description": "Embodies heartbreak, sorrow, and emotional pain."
+  },
+  {
+    "number": 54,
+    "name": "Four of Swords",
+    "description": "Symbolizes rest, recuperation, and taking time to recover."
+  },
+  {
+    "number": 55,
+    "name": "Five of Swords",
+    "description": "Represents conflict, tension, and the consequences of deceit."
+  },
+  {
+    "number": 56,
+    "name": "Six of Swords",
+    "description": "Embodies transition, moving forward, and leaving troubles behind."
+  },
+  {
+    "number": 57,
+    "name": "Seven of Swords",
+    "description": "Symbolizes strategy, cunning, and sometimes deceitful behavior."
+  },
+  {
+    "number": 58,
+    "name": "Eight of Swords",
+    "description": "Represents restriction, self-imposed limitations, and feeling trapped."
+  },
+  {
+    "number": 59,
+    "name": "Nine of Swords",
+    "description": "Embodies anxiety, fear, and mental anguish."
+  },
+  {
+    "number": 60,
+    "name": "Ten of Swords",
+    "description": "Symbolizes endings, betrayal, and the culmination of painful experiences."
+  },
+  {
+    "number": 61,
+    "name": "Page of Swords",
+    "description": "Represents curiosity, mental agility, and the pursuit of truth."
+  },
+  {
+    "number": 62,
+    "name": "Knight of Swords",
+    "description": "Embodies action, bravery, and a swift pursuit of goals."
+  },
+  {
+    "number": 63,
+    "name": "Queen of Swords",
+    "description": "Symbolizes independence, clear communication, and unbiased judgment."
+  },
+  {
+    "number": 64,
+    "name": "King of Swords",
+    "description": "Represents intellectual authority, strategic thinking, and moral integrity."
+  },
+  {
+    "number": 65,
+    "name": "Ace of Pentacles",
+    "description": "Symbolizes new financial opportunities, prosperity, and the manifestation of goals."
+  },
+  {
+    "number": 66,
+    "name": "Two of Pentacles",
+    "description": "Represents balance, adaptability, and juggling multiple responsibilities."
+  },
+  {
+    "number": 67,
+    "name": "Three of Pentacles",
+    "description": "Embodies teamwork, collaboration, and the pursuit of mastery."
+  },
+  {
+    "number": 68,
+    "name": "Four of Pentacles",
+    "description": "Symbolizes control, security, and sometimes possessiveness over resources."
+  },
+  {
+    "number": 69,
+    "name": "Five of Pentacles",
+    "description": "Represents hardship, financial loss, and feeling left out in the cold."
+  },
+  {
+    "number": 70,
+    "name": "Six of Pentacles",
+    "description": "Embodies generosity, charity, and the balance between giving and receiving."
+  },
+  {
+    "number": 71,
+    "name": "Seven of Pentacles",
+    "description": "Symbolizes patience, perseverance, and the assessment of progress."
+  },
+  {
+    "number": 72,
+    "name": "Eight of Pentacles",
+    "description": "Represents diligence, craftsmanship, and the dedication to improving skills."
+  },
+  {
+    "number": 73,
+    "name": "Nine of Pentacles",
+    "description": "Embodies luxury, self-sufficiency, and the rewards of hard work."
+  },
+  {
+    "number": 74,
+    "name": "Ten of Pentacles",
+    "description": "Symbolizes wealth, family legacy, and long-term success."
+  },
+  {
+    "number": 75,
+    "name": "Page of Pentacles",
+    "description": "Represents ambition, curiosity, and the pursuit of new financial ventures."
+  },
+  {
+    "number": 76,
+    "name": "Knight of Pentacles",
+    "description": "Embodies reliability, hard work, and a methodical approach to tasks."
+  },
+  {
+    "number": 77,
+    "name": "Queen of Pentacles",
+    "description": "Symbolizes practicality, resourcefulness, and nurturing of financial stability."
+  },
+  {
+    "number": 78,
+    "name": "King of Pentacles",
+    "description": "Represents financial mastery, abundance, and successful management of resources."
+  }
+]

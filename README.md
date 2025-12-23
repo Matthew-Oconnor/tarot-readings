@@ -14,6 +14,8 @@ Start the backend server from the root project directory.
 
 `node backend/server.js`
 
+If you're running as a container, you'll need to use the `--env-file .env` option in order to provide the API key to the container.
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
