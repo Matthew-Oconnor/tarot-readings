@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: test-backend
-        image: zaptapped/my-first-container:v5.1.0
+        image: zaptapped/my-first-container:v5.1.1
         env:
         - name: OPENAI_BASE_URL
           value: "http://192.168.1.10:11434"
