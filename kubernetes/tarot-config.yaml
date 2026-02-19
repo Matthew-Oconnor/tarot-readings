@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tarot-config
+data:
+  CURRENT_MODEL: "ministral-3:14b"
+  # Other models to try? ministral-3:14b, gemma3:latest
