@@ -2,9 +2,32 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: tarot-ingress
+  annotations:
+    # cert-manager.io/cluster-issuer: letsencrypt-staging
 spec:
   ingressClassName: nginx
+  # tls:
+  # - hosts:
+  #   - catdadservices.com
+  #   secretName: catdadservices-tls
   rules:
+  - host: tarot.catdadservices.com
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: tarot-backend-service
+            port:
+              name: backend
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: tarot-frontend-service
+            port:
+              name: frontend
   - host: tarot.localdev.test
     http:
       paths:
@@ -25,5 +48,5 @@ spec:
   # Optional TLS
   # tls:
   # - hosts:
-  #   - tarot.localdev.test
+  #   - not sure? I want to have this reachable at https://catdadservices.com/tarot
   #   secretName: tarot-tls

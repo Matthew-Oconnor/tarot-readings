@@ -16,7 +16,15 @@ spec:
     spec:
       containers:
       - name: test-backend
-        image: zaptapped/my-first-container:v3.1.4
+        image: zaptapped/my-first-container:v5.1.1
+        env:
+        - name: OPENAI_BASE_URL
+          value: "http://192.168.1.10:11434"
+        - name: CURRENT_MODEL
+          valueFrom:
+            configMapKeyRef:
+              name: tarot-config
+              key: CURRENT_MODEL
         ports:
           - name: backend
             containerPort: 5001
