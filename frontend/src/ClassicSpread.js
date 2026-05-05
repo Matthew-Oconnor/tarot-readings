@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './ClassicSpread.css';
 import cardsData from './cards.json';
-import axios from 'axios';
 import ResponseContainer from './ResponseContainer';
+import { streamText } from './streamText';
 
 const TOTAL_CARDS = 78; // Total number of cards in the deck
 const CARDS_TO_DISPLAY = 3; // Number of cards to display
@@ -11,9 +11,11 @@ const ClassicSpread = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [selectedCards, setSelectedCards] = useState([]);
   const [responseText, setResponseText] = useState('');
+  const [isResponseStreaming, setIsResponseStreaming] = useState(false);
   const [showReturnButton, setshowReturnButton] = useState(false); // State to control button visibility
+  const streamAbortRef = useRef(null);
 
-  const generateUniqueRandomCards = () => {
+  const generateUniqueRandomCards = useCallback(() => {
     const numbers = new Set();
     const cards = [];
   
@@ -30,14 +32,16 @@ const ClassicSpread = () => {
     }
   
     return cards;
-  };
+  }, []);
 
-  const selectRandomCards = () => {
+  const selectRandomCards = useCallback(() => {
+    streamAbortRef.current?.abort();
     const randomCards = generateUniqueRandomCards();
     setSelectedCards(randomCards);
     setResponseText(''); // Clear previous response when reshuffling
+    setIsResponseStreaming(false);
     setshowReturnButton(false); // Hide the button when reshuffling
-  };
+  }, [generateUniqueRandomCards]);
 
   useEffect(() => {
     const fadeInTimeout = setTimeout(() => {
@@ -46,34 +50,56 @@ const ClassicSpread = () => {
 
     selectRandomCards();
 
-    return () => clearTimeout(fadeInTimeout);
-  }, []);
+    return () => {
+      clearTimeout(fadeInTimeout);
+      streamAbortRef.current?.abort();
+    };
+  }, [selectRandomCards]);
 
   const getCardData = (cardNumber) => {
     return cardsData.find((card) => card.number === cardNumber);
   };
 
-  const generateSpreadInterpretation = async () => {
+  const generateSpreadInterpretation = useCallback(async () => {
+    streamAbortRef.current?.abort();
+    const controller = new AbortController();
+    streamAbortRef.current = controller;
+
+    setResponseText('');
+    setIsResponseStreaming(true);
+    setshowReturnButton(false);
+
     try {
-      const res = await axios.post('/api/psychic/spread', {
-        cards: selectedCards,
+      await streamText('/api/psychic/spread/stream', {
+        body: { cards: selectedCards },
+        signal: controller.signal,
+        onChunk: (_chunk, fullText) => {
+          setResponseText(fullText);
+        },
       });
-      setResponseText(res.data.response);
     } catch (error) {
+      if (error.name === 'AbortError') {
+        return;
+      }
+
       console.error('Error fetching reading:', error?.message);
       setResponseText('An error occurred while discussing the spread.');
+    } finally {
+      if (streamAbortRef.current === controller) {
+        streamAbortRef.current = null;
+        setIsResponseStreaming(false);
+      }
     }
-  };
+  }, [selectedCards]);
 
   useEffect(() => {
     if (selectedCards.length === CARDS_TO_DISPLAY) {
       generateSpreadInterpretation();
     }
-  }, [selectedCards]);
+  }, [generateSpreadInterpretation, selectedCards]);
 
   // Callback for when typing is complete
   const handleTypingComplete = () => {
-    console.log("classic-spread is handling")
     setshowReturnButton(true); // Show the button when typing is done
   };
 
@@ -101,6 +127,7 @@ const ClassicSpread = () => {
       <ResponseContainer
         text={responseText}
         fade={isVisible}
+        isStreaming={isResponseStreaming}
         onTypingComplete={handleTypingComplete}
       />
       {/* Render button when showReturnButton is true */}

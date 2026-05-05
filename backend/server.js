@@ -35,6 +35,52 @@ function messagesToPrompt(messages) {
     .concat('\nASSISTANT:');
 }
 
+function createOllamaClient() {
+  return axios.create({
+    baseURL: OLLAMA_BASE_URL,
+    timeout: 60_000,
+    headers: { 'Content-Type': 'application/json' },
+    // Don’t throw automatically so we can inspect body on non-2xx.
+    validateStatus: () => true,
+  });
+}
+
+async function readStreamBody(stream) {
+  let text = '';
+
+  for await (const chunk of stream) {
+    text += chunk.toString('utf8');
+  }
+
+  return text;
+}
+
+function buildOllamaRequest({ model, messages, prompt, options, stream = false }) {
+  if (Array.isArray(messages)) {
+    return {
+      endpoint: '/api/chat',
+      body: {
+        model,
+        messages,
+        stream,
+        options: options || undefined,
+      },
+      mode: 'chat',
+    };
+  }
+
+  return {
+    endpoint: '/api/generate',
+    body: {
+      model,
+      prompt: typeof prompt === 'string' ? prompt : messagesToPrompt(messages),
+      stream,
+      options: options || undefined,
+    },
+    mode: 'generate',
+  };
+}
+
 /**
  * Call Ollama in a non-streaming way and return a clean text response.
  *
@@ -42,56 +88,118 @@ function messagesToPrompt(messages) {
  * Falls back to /api/generate by converting messages -> prompt.
  */
 async function ollamaRequest({ model, messages, prompt, options }) {
-  const client = axios.create({
-    baseURL: OLLAMA_BASE_URL,
-    timeout: 60_000,
-    headers: { 'Content-Type': 'application/json' },
-    // Don’t throw automatically so we can print body on non-2xx.
-    validateStatus: () => true,
-  });
-
-  // Prefer chat if messages provided.
-  if (Array.isArray(messages)) {
-    const r = await client.post('/api/chat', {
-      model,
-      messages,
-      stream: false, // IMPORTANT: otherwise you get NDJSON streaming
-      options: options || undefined,
-    });
-
-    if (r.status < 200 || r.status >= 300) {
-      const detail = r.data || r.statusText;
-      const err = new Error(`Ollama /api/chat failed: ${r.status}`);
-      err.status = r.status;
-      err.detail = detail;
-      throw err;
-    }
-
-    // Ollama chat response shape: { message: { role, content }, done, ... }
-    const text = (r.data?.message?.content ?? '').trim();
-    return { text, raw: r.data, mode: 'chat' };
-  }
-
-  // Generate mode.
-  const finalPrompt = typeof prompt === 'string' ? prompt : messagesToPrompt(messages);
-  const r = await client.post('/api/generate', {
-    model,
-    prompt: finalPrompt,
-    stream: false, // IMPORTANT
-    options: options || undefined,
-  });
+  const client = createOllamaClient();
+  const request = buildOllamaRequest({ model, messages, prompt, options, stream: false });
+  const r = await client.post(request.endpoint, request.body);
 
   if (r.status < 200 || r.status >= 300) {
     const detail = r.data || r.statusText;
-    const err = new Error(`Ollama /api/generate failed: ${r.status}`);
+    const err = new Error(`Ollama ${request.endpoint} failed: ${r.status}`);
     err.status = r.status;
     err.detail = detail;
     throw err;
   }
 
-  // Ollama generate response shape: { response: "...", done, ... }
-  const text = (r.data?.response ?? '').trim();
-  return { text, raw: r.data, mode: 'generate' };
+  const text = request.mode === 'chat'
+    ? (r.data?.message?.content ?? '').trim()
+    : (r.data?.response ?? '').trim();
+
+  return { text, raw: r.data, mode: request.mode };
+}
+
+async function ollamaStreamText({ req, res, model, messages, prompt, options }) {
+  const client = createOllamaClient();
+  const request = buildOllamaRequest({ model, messages, prompt, options, stream: true });
+  const r = await client.post(request.endpoint, request.body, {
+    responseType: 'stream',
+  });
+
+  if (r.status < 200 || r.status >= 300) {
+    const detail = await readStreamBody(r.data);
+    const err = new Error(`Ollama ${request.endpoint} failed: ${r.status}`);
+    err.status = r.status;
+    err.detail = detail || r.statusText;
+    throw err;
+  }
+
+  res.status(200);
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('X-Accel-Buffering', 'no');
+
+  if (typeof res.flushHeaders === 'function') {
+    res.flushHeaders();
+  }
+
+  const upstream = r.data;
+  let closed = false;
+  let buffer = '';
+
+  res.on('close', () => {
+    if (res.writableEnded) {
+      return;
+    }
+
+    closed = true;
+    upstream.destroy();
+  });
+
+  for await (const chunk of upstream) {
+    if (closed) {
+      return;
+    }
+
+    buffer += chunk.toString('utf8');
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+
+      let parsed;
+      try {
+        parsed = JSON.parse(trimmed);
+      } catch (err) {
+        console.error('[StreamParseError]', {
+          endpoint: request.endpoint,
+          line: trimmed,
+          message: err.message,
+        });
+        continue;
+      }
+
+      const text = request.mode === 'chat'
+        ? parsed?.message?.content
+        : parsed?.response;
+
+      if (text) {
+        res.write(text);
+      }
+    }
+  }
+
+  const trailing = buffer.trim();
+  if (trailing) {
+    try {
+      const parsed = JSON.parse(trailing);
+      const text = request.mode === 'chat'
+        ? parsed?.message?.content
+        : parsed?.response;
+
+      if (text) {
+        res.write(text);
+      }
+    } catch (err) {
+      console.error('[StreamParseError]', {
+        endpoint: request.endpoint,
+        line: trailing,
+        message: err.message,
+      });
+    }
+  }
+
+  res.end();
 }
 
 /**
@@ -141,6 +249,32 @@ app.post('/api/psychic/intro', async (req, res) => {
   }
 });
 
+app.post('/api/psychic/intro/stream', async (req, res) => {
+  try {
+    const messages = introPrompt({});
+
+    await ollamaStreamText({
+      req,
+      res,
+      model: MODEL,
+      messages,
+    });
+  } catch (err) {
+    if (!res.headersSent) {
+      return sendDownstreamError(res, err, { route: '/api/psychic/intro/stream' });
+    }
+
+    console.error('[DownstreamError]', {
+      route: '/api/psychic/intro/stream',
+      status: err.status,
+      message: err.message,
+      detail: err.detail,
+    });
+
+    res.end();
+  }
+});
+
 app.post('/api/psychic/spread', async (req, res) => {
   try {
     const { cards = [], tone = 'warm' } = req.body || {};
@@ -181,6 +315,48 @@ app.post('/api/psychic/spread', async (req, res) => {
     });
   } catch (err) {
     return sendDownstreamError(res, err, { route: '/api/psychic/spread' });
+  }
+});
+
+app.post('/api/psychic/spread/stream', async (req, res) => {
+  try {
+    const { cards = [], tone = 'warm' } = req.body || {};
+
+    if (!Array.isArray(cards) || cards.length === 0) {
+      return res.status(400).json({ error: '`cards` must be a non-empty array.' });
+    }
+
+    const normalized = cards.slice(0, 3).map((c) => ({
+      number: Number(c?.number),
+      inverted: !!c?.inverted,
+    }));
+
+    const bad = normalized.find((c) => Number.isNaN(c.number));
+    if (bad) {
+      return res.status(400).json({ error: 'Each card must include a numeric `number`.' });
+    }
+
+    const messages = psychicSpread({ cards: normalized, tone });
+
+    await ollamaStreamText({
+      req,
+      res,
+      model: MODEL,
+      messages,
+    });
+  } catch (err) {
+    if (!res.headersSent) {
+      return sendDownstreamError(res, err, { route: '/api/psychic/spread/stream' });
+    }
+
+    console.error('[DownstreamError]', {
+      route: '/api/psychic/spread/stream',
+      status: err.status,
+      message: err.message,
+      detail: err.detail,
+    });
+
+    res.end();
   }
 });
 

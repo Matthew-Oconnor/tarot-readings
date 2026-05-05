@@ -16,10 +16,41 @@
   overflow-wrap: break-word; /* Prevents long words from overflowing */
 }
 
+.Response-text {
+  color: #ffffff;
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.Response-cursor {
+  display: inline-block;
+  width: 0.65ch;
+}
+
+.Response-cursor::after {
+  content: '';
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  background: currentColor;
+  vertical-align: -0.1em;
+  animation: blink 1s steps(1, end) infinite;
+}
+
 .fade-in {
   opacity: 1;
 }
 
 .fade-out {
   opacity: 0;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
 }

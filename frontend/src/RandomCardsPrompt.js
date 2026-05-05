@@ -1,6 +1,6 @@
 // src/components/RandomCards/RandomCards.js
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './RandomCardsPrompt.css';
 import cardsData from './cards.json';
 
@@ -11,25 +11,25 @@ function RandomCardsPrompt({ fade, startTheSpread }) { // Accept fade prop
   const [selectedCards, setSelectedCards] = useState([]);
 
   // Function to generate three unique random numbers between 1 and TOTAL_CARDS
-  const generateUniqueRandomNumbers = () => {
+  const generateUniqueRandomNumbers = useCallback(() => {
     const numbers = new Set();
     while (numbers.size < CARDS_TO_DISPLAY) {
       const randomNum = Math.floor(Math.random() * TOTAL_CARDS) + 1;
       numbers.add(randomNum);
     }
     return Array.from(numbers);
-  };
+  }, []);
 
   // Function to select three random cards
-  const selectRandomCards = () => {
+  const selectRandomCards = useCallback(() => {
     const randomNumbers = generateUniqueRandomNumbers();
     setSelectedCards(randomNumbers);
-  };
+  }, [generateUniqueRandomNumbers]);
 
   // Select random cards on component mount
   useEffect(() => {
     selectRandomCards();
-  }, []);
+  }, [selectRandomCards]);
 
   // Helper function to get card data by number
   const getCardData = (cardNumber) => {

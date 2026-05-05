@@ -1,10 +1,10 @@
 // MainLoop.js
-import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Button from './Button';
 import ResponseContainer from './ResponseContainer';
 import RandomCardsPrompt from './RandomCardsPrompt';
 import ClassicSpread from './ClassicSpread';
+import { streamText } from './streamText';
 import './MainLoop.css';
 
 const MainLoop = () => {
@@ -12,10 +12,18 @@ const MainLoop = () => {
   const [fade, setFade] = useState(false);
   const [spreadFade, setSpreadFade] = useState(false);
   const [responseText, setResponseText] = useState('');
+  const [isIntroStreaming, setIsIntroStreaming] = useState(false);
+  const introAbortRef = useRef(null);
 
   useEffect(() => {
     const t = setTimeout(() => setFade(true), 100);
     return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      introAbortRef.current?.abort();
+    };
   }, []);
 
   useEffect(() => {
@@ -30,15 +38,35 @@ const MainLoop = () => {
   const handleClick = async () => {
     setFade(false);
     setTimeout(async () => {
+      introAbortRef.current?.abort();
+      const controller = new AbortController();
+      introAbortRef.current = controller;
+
+      setResponseText('');
+      setScene('prompt');
+      setFade(true);
+      setIsIntroStreaming(true);
+
       try {
-        const res = await axios.post('/api/psychic/intro', {});
-        setResponseText(res.data.response);
+        await streamText('/api/psychic/intro/stream', {
+          body: {},
+          signal: controller.signal,
+          onChunk: (_chunk, fullText) => {
+            setResponseText(fullText);
+          },
+        });
       } catch (err) {
+        if (err.name === 'AbortError') {
+          return;
+        }
+
         console.error('intro error:', err?.message);
         setResponseText('An error occurred while typing.');
       } finally {
-        setFade(true);
-        setScene('prompt');
+        if (introAbortRef.current === controller) {
+          introAbortRef.current = null;
+          setIsIntroStreaming(false);
+        }
       }
     }, 2000);
   };
@@ -73,9 +101,9 @@ const MainLoop = () => {
       {(scene === 'prompt' || scene === 'fan-cards') && (
         <>
           <ResponseContainer
-            key={responseText}              // remount when text changes
             text={responseText}
             fade={fade}
+            isStreaming={isIntroStreaming}
             // only trigger transition when in 'prompt'
             onTypingComplete={scene === 'prompt' ? handleFinishTyping : undefined}
           />
