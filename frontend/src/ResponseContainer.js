@@ -1,21 +1,30 @@
 // ResponseContainer.js
-import React, { memo } from 'react';
-import Typewriter from './Typewriter';
+import React, { memo, useEffect, useRef } from 'react';
 import './ResponseContainer.css';
 
-const SPEED_RANGE = [5, 40];
-
-const ResponseContainer = ({ text, fade, onTypingComplete }) => {
+const ResponseContainer = ({ text, fade, isStreaming = false, onTypingComplete }) => {
   const safeText = typeof text === 'string' ? text : '';
+  const completedRef = useRef(false);
+
+  useEffect(() => {
+    if (isStreaming) {
+      completedRef.current = false;
+      return;
+    }
+
+    if (!completedRef.current && safeText !== '' && onTypingComplete) {
+      completedRef.current = true;
+      onTypingComplete();
+    }
+  }, [isStreaming, onTypingComplete, safeText]);
 
   return (
     <div className={`Response-container ${fade ? 'fade-in' : 'fade-out'}`}>
       {safeText !== '' && (
-        <Typewriter
-          text={safeText}
-          speedRange={SPEED_RANGE}
-          onComplete={onTypingComplete}
-        />
+        <p className="Response-text">
+          {safeText}
+          {isStreaming && <span className="Response-cursor" aria-hidden="true" />}
+        </p>
       )}
     </div>
   );
