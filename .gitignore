@@ -11,6 +11,8 @@
 
 # production
 /build
+/frontend/build
+/frontend/dist
 
 # misc
 .DS_Store
@@ -27,3 +29,6 @@ yarn-error.log*
 
 # remove assets from git
 /frontend/public/waite-deck
+
+# remove AI junk
+.codex
