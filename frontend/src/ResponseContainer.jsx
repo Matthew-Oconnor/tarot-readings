@@ -1,4 +1,4 @@
-// ResponseContainer.js
+// ResponseContainer.jsx
 import React, { memo, useEffect, useRef } from 'react';
 import './ResponseContainer.css';
 

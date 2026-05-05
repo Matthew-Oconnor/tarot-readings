@@ -1,10 +1,11 @@
-// MainLoop.js
+// MainLoop.jsx
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Button from './Button';
 import ResponseContainer from './ResponseContainer';
 import RandomCardsPrompt from './RandomCardsPrompt';
 import ClassicSpread from './ClassicSpread';
 import { streamText } from './streamText';
+import { applyStreamUpdate } from './applyStreamUpdate';
 import './MainLoop.css';
 
 const MainLoop = () => {
@@ -52,7 +53,7 @@ const MainLoop = () => {
           body: {},
           signal: controller.signal,
           onChunk: (_chunk, fullText) => {
-            setResponseText(fullText);
+            applyStreamUpdate(setResponseText, fullText);
           },
         });
       } catch (err) {

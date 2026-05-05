@@ -3,6 +3,7 @@ import './ClassicSpread.css';
 import cardsData from './cards.json';
 import ResponseContainer from './ResponseContainer';
 import { streamText } from './streamText';
+import { applyStreamUpdate } from './applyStreamUpdate';
 
 const TOTAL_CARDS = 78; // Total number of cards in the deck
 const CARDS_TO_DISPLAY = 3; // Number of cards to display
@@ -74,7 +75,7 @@ const ClassicSpread = () => {
         body: { cards: selectedCards },
         signal: controller.signal,
         onChunk: (_chunk, fullText) => {
-          setResponseText(fullText);
+          applyStreamUpdate(setResponseText, fullText);
         },
       });
     } catch (error) {
