@@ -18,13 +18,23 @@ spec:
       - name: test-backend
         image: zaptapped/my-first-container:v6.0.0
         env:
-        - name: OPENAI_BASE_URL
+        - name: SIMPHONI_API_BASE_URL
           value: "http://192.168.1.10:11434"
-        - name: CURRENT_MODEL
+        - name: SIMPHONI_MODEL
           valueFrom:
             configMapKeyRef:
               name: tarot-config
-              key: CURRENT_MODEL
+              key: SIMPHONI_MODEL
+        - name: SIMPHONI_TIMEOUT_MS
+          valueFrom:
+            configMapKeyRef:
+              name: tarot-config
+              key: SIMPHONI_TIMEOUT_MS
+        - name: SIMPHONI_STREAMING_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: tarot-config
+              key: SIMPHONI_STREAMING_ENABLED
         ports:
           - name: backend
             containerPort: 5001

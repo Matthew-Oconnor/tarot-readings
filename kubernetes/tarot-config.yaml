@@ -3,5 +3,8 @@ kind: ConfigMap
 metadata:
   name: tarot-config
 data:
+  SIMPHONI_MODEL: "ministral-3:14b"
+  SIMPHONI_TIMEOUT_MS: "120000"
+  SIMPHONI_STREAMING_ENABLED: "true"
   CURRENT_MODEL: "ministral-3:14b"
-  # Other models to try? ministral-3:14b, gemma3:latest
+  # CURRENT_MODEL is retained for older deployments. Other models to try? ministral-3:14b, gemma3:latest
