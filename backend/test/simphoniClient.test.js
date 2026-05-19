@@ -168,6 +168,45 @@ test('uses non-streaming fallback when streaming is rejected', async () => {
   }
 });
 
+test('rotates configured base URLs while preserving fallback order', async () => {
+  const calls = [];
+  const first = await startMockServer(async (req, res) => {
+    await readJsonBody(req);
+    calls.push('first');
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ message: { content: 'first response' }, done: true }));
+  });
+  const second = await startMockServer(async (req, res) => {
+    await readJsonBody(req);
+    calls.push('second');
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ message: { content: 'second response' }, done: true }));
+  });
+
+  const config = testConfig(first.baseUrl, {
+    SIMPHONI_FALLBACK_BASE_URLS: second.baseUrl,
+    SIMPHONI_STREAMING_ENABLED: '0',
+  });
+
+  try {
+    const one = await requestLanguage({
+      config,
+      messages: [{ role: 'user', content: 'Read the spread.' }],
+    });
+    const two = await requestLanguage({
+      config,
+      messages: [{ role: 'user', content: 'Read the spread.' }],
+    });
+
+    assert.equal(one.text, 'first response');
+    assert.equal(two.text, 'second response');
+    assert.deepEqual(calls, ['first', 'second']);
+  } finally {
+    await closeServer(first.server);
+    await closeServer(second.server);
+  }
+});
+
 test('surfaces timeout failures without leaking configured credentials', async () => {
   const { server, baseUrl } = await startMockServer(async (req, res) => {
     await new Promise((resolve) => setTimeout(resolve, 100));

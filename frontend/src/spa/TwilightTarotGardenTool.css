@@ -1,0 +1,369 @@
+
+.twilight-tarot-tool {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  height: 100%;
+  color: #f7efff;
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 1rem;
+  background: var(
+      --ttg-background,
+      linear-gradient(135deg, rgba(43, 0, 79, 0.92), rgba(13, 1, 41, 0.96))
+    );
+}
+
+.twilight-tarot-aurora {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+      circle at 10% 10%,
+      rgba(255, 255, 255, 0.1),
+      transparent 40%
+    ),
+    radial-gradient(circle at 90% 20%, rgba(255, 255, 255, 0.08), transparent 45%);
+  pointer-events: none;
+  opacity: 0.9;
+  mix-blend-mode: screen;
+  animation: twilightDrift 16s ease-in-out infinite alternate;
+  transform-origin: center;
+  z-index: 0;
+}
+
+@keyframes twilightDrift {
+  0% {
+    transform: scale(1) translate3d(0, 0, 0);
+    opacity: 0.65;
+  }
+  50% {
+    transform: scale(1.04) translate3d(-12px, 6px, 0);
+    opacity: 0.92;
+  }
+  100% {
+    transform: scale(1.02) translate3d(10px, -8px, 0);
+    opacity: 0.7;
+  }
+}
+
+.twilight-tarot-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  padding: 1rem 1.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  z-index: 1;
+}
+
+.twilight-tarot-heading h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: var(--ttg-accent, #c995ff);
+  letter-spacing: 0.03em;
+  text-shadow: 0 0 18px rgba(198, 149, 255, 0.4);
+}
+
+.twilight-tarot-heading p {
+  margin: 0.4rem 0 0;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.twilight-tarot-updates {
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid var(--ttg-accent-soft, rgba(201, 149, 255, 0.24));
+  background: rgba(20, 1, 35, 0.6);
+  box-shadow: 0 12px 40px rgba(8, 0, 20, 0.35);
+}
+
+.twilight-tarot-tagline {
+  text-transform: uppercase;
+  letter-spacing: 0.26rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.56);
+}
+
+.twilight-tarot-close {
+  align-self: flex-start;
+  background: rgba(84, 20, 122, 0.85);
+  border: 1px solid rgba(201, 149, 255, 0.6);
+  border-radius: 999px;
+  color: #f6e9ff;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.twilight-tarot-close:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(120, 40, 180, 0.35);
+}
+
+.twilight-tarot-layout {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 1.5rem;
+  padding: 0 1.5rem 1.5rem;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.twilight-tarot-sidebar {
+  flex: 0 0 28%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  background: rgba(28, 2, 37, 0.82);
+  border: 1px solid rgba(201, 149, 255, 0.35);
+  border-radius: 14px;
+  padding: 1.2rem;
+  overflow-y: auto;
+  box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.28);
+}
+
+.twilight-tarot-sidebar section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.twilight-tarot-sidebar section:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.twilight-tarot-sidebar h2,
+.twilight-tarot-sidebar h3 {
+  margin: 0;
+  color: var(--ttg-accent, #c995ff);
+  letter-spacing: 0.02em;
+}
+
+.twilight-tarot-sidebar ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  line-height: 1.5;
+}
+
+.twilight-tarot-sidebar li {
+  margin-bottom: 0.6rem;
+}
+
+.twilight-tarot-section-caption {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.twilight-tarot-palettes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.twilight-tarot-palette {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  background: rgba(12, 0, 22, 0.8);
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border 0.25s ease;
+  text-align: left;
+}
+
+.twilight-tarot-palette strong {
+  font-size: 0.95rem;
+}
+
+.twilight-tarot-palette span:last-child {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.twilight-tarot-palette .twilight-tarot-palette-sheen {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.16), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.twilight-tarot-palette.is-active,
+.twilight-tarot-palette:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(10, 0, 20, 0.35);
+  border-color: var(--ttg-accent-soft, rgba(201, 149, 255, 0.35));
+}
+
+.twilight-tarot-palette.is-active .twilight-tarot-palette-sheen,
+.twilight-tarot-palette:hover .twilight-tarot-palette-sheen {
+  opacity: 1;
+}
+
+.twilight-tarot-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(10, 0, 20, 0.76);
+  padding: 0.9rem;
+  box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.28);
+}
+
+.twilight-tarot-card--luminous {
+  background: rgba(15, 0, 35, 0.7);
+  border-color: var(--ttg-accent-soft, rgba(201, 149, 255, 0.28));
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.24), 0 0 18px var(--ttg-accent-soft, rgba(201, 149, 255, 0.18));
+}
+
+.twilight-tarot-card button,
+.twilight-tarot-sidebar button {
+  align-self: flex-start;
+  background: linear-gradient(120deg, rgba(88, 32, 150, 0.82), rgba(149, 86, 220, 0.84));
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  color: #fdf9ff;
+  padding: 0.45rem 1.1rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.twilight-tarot-card button:hover,
+.twilight-tarot-sidebar button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(120, 40, 190, 0.45);
+}
+
+.twilight-tarot-sidebar textarea {
+  min-height: 120px;
+  resize: vertical;
+  border-radius: 10px;
+  border: 1px solid rgba(201, 149, 255, 0.35);
+  background: rgba(8, 0, 16, 0.7);
+  color: #f7efff;
+  padding: 0.75rem;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.twilight-tarot-sidebar textarea:focus {
+  outline: 2px solid rgba(190, 120, 255, 0.6);
+  box-shadow: 0 0 12px rgba(190, 120, 255, 0.35);
+}
+
+.twilight-tarot-outline {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.twilight-tarot-outline label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.twilight-tarot-outline span {
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.twilight-tarot-outline textarea {
+  min-height: 80px;
+}
+
+.twilight-tarot-ritual {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.9rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(8, 0, 18, 0.72);
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.24);
+}
+
+.twilight-tarot-ritual-step {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16rem;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.twilight-tarot-main {
+  flex: 1 1 auto;
+  background: rgba(16, 0, 30, 0.82);
+  border: 1px solid rgba(141, 102, 255, 0.35);
+  border-radius: 16px;
+  padding: 0.8rem 0.6rem;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: inset 0 0 38px rgba(0, 0, 0, 0.35);
+}
+
+.twilight-tarot-main-banner {
+  margin: 0 0 1rem;
+  padding: 0.65rem 1.2rem;
+  border-radius: 12px;
+  border: 1px solid var(--ttg-accent-soft, rgba(141, 102, 255, 0.28));
+  background: rgba(12, 0, 28, 0.76);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.95rem;
+  box-shadow: 0 0 25px rgba(12, 0, 25, 0.32);
+}
+
+.twilight-tarot-main .MainLoop-container {
+  min-height: auto;
+  padding: 1.5rem 0.5rem 2rem;
+}
+
+@media (max-width: 1280px) {
+  .twilight-tarot-layout {
+    flex-direction: column;
+  }
+
+  .twilight-tarot-sidebar {
+    flex: 0 0 auto;
+    order: 2;
+  }
+
+  .twilight-tarot-main {
+    order: 1;
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 768px) {
+  .twilight-tarot-header {
+    flex-direction: column;
+  }
+
+  .twilight-tarot-close {
+    align-self: stretch;
+    text-align: center;
+  }
+
+  .twilight-tarot-layout {
+    padding: 0 0.5rem 1rem;
+  }
+}

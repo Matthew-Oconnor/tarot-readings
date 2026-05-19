@@ -102,8 +102,13 @@ async function streamReading(req, res, messages, route) {
     }
   };
 
-  req.on('close', () => {
+  req.on('aborted', () => {
     closed = true;
+  });
+  res.on('close', () => {
+    if (!res.writableEnded) {
+      closed = true;
+    }
   });
 
   try {

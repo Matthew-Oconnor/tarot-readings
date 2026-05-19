@@ -113,11 +113,18 @@ const ClassicSpread = () => {
             <h3>{['The Past', 'The Present', 'The Future'][index]}</h3>
             {card && (
               <img
-                src={`/waite-deck/card${card.number}.jpg`}
+                src={`/waite-deck/card${card.number}.png`}
                 alt={`${getCardData(card.number)?.name || 'Unknown Card'}: ${
                   getCardData(card.number)?.description || ''
                 }`}
                 className={`card-image ${card.inverted ? 'inverted' : ''}`}
+                onError={(event) => {
+                  if (event.currentTarget.dataset.fallback === 'jpg') {
+                    return;
+                  }
+                  event.currentTarget.dataset.fallback = 'jpg';
+                  event.currentTarget.src = `/waite-deck/card${card.number}.jpg`;
+                }}
                 style={{ transform: card.inverted ? 'rotate(180deg)' : 'none' }}
               />
             )}

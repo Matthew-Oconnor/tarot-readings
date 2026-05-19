@@ -17,7 +17,7 @@ node backend/server.js
 
 Required:
 
-- `SIMPHONI_API_BASE_URL`: Apex-01 / Simphoni API base URL. Use the same-origin edge, Orkest API, Simphoni core API, or another configured service base that exposes compatible language routes.
+- `SIMPHONI_API_BASE_URL`: Apex-01 / Simphoni API base URL. On apex-01 the Twilight Tarot Garden launchd profile points this at the first local llama.cpp node, `http://127.0.0.1:20821`.
 - `SIMPHONI_MODEL`: Model name passed to the upstream service.
 
 Optional:
@@ -26,6 +26,7 @@ Optional:
 - `SIMPHONI_STREAMING_ENABLED`: defaults to `true`; sends `stream: true` upstream and streams text to `/stream` callers.
 - `SIMPHONI_NON_STREAMING_FALLBACK`: defaults to `true`; retries with `stream: false` if streaming routes are unavailable.
 - `SIMPHONI_FALLBACK_BASE_URLS`: comma-separated fallback base URLs tried after the primary base.
+- `SIMPHONI_ROTATE_BASE_URLS`: defaults to `true`; rotates the starting base URL per request so the three-node apex-01 pool receives traffic while keeping the remaining nodes as ordered fallbacks.
 - `SIMPHONI_INCLUDE_LOCAL_FALLBACKS`: enables built-in Apex-01 local fallbacks. When no base URL is configured, local development falls back to `127.0.0.1:5037`, `127.0.0.1:8768`, and `127.0.0.1:11435`.
 - `SIMPHONI_API_KEY` or `SIMPHONI_API_TOKEN`: optional bearer credential for deployments that require one.
 
@@ -40,6 +41,18 @@ The backend tries compatible endpoints in this order for chat-style tarot prompt
 For prompt-style calls it tries `/api/generate`, `/v1/completions`, then `/api/chat`. Streaming responses may be newline-delimited JSON or SSE `data:` events and may end with `[DONE]`. Malformed stream lines are ignored and counted in response metadata instead of crashing the request.
 
 `GET /healthz` reports provider, model/base URL presence, timeout, streaming settings, and redacted base URLs. It never reports API keys or tokens.
+
+## Apex-01 Twilight Tarot Garden Runtime
+
+The hosted Simphoni route `/communiti/twilight-tarot-garden` is served by `Simphoni-SPA`, but the route-owned JSX/CSS implementation now lives in this extracted repo under `frontend/src/spa/` and `frontend/src/`. `Simphoni-SPA` imports it through the `@tarot-readings` Vite alias.
+
+On apex-01, the persistent local runtime is:
+
+- `ai.simphoni.tarot-llama-nodes`: keeps three llama.cpp `ministral-3:14b` nodes listening on `127.0.0.1:20821`, `20822`, and `20823`.
+- `ai.simphoni.tarot-readings-backend`: runs this backend on `127.0.0.1:5011` with `SIMPHONI_API_BASE_URL=http://127.0.0.1:20821` and fallback bases for `20822`/`20823`.
+- `ai.simphoni.orkest`: proxies same-origin browser calls from `https://simphoni.ai/api/psychic/*` to the tarot backend.
+
+No browser-side token is required. The browser calls same-origin `/api/psychic/*`, Orkest proxies to the tarot backend, and the backend talks to the local llama.cpp nodes.
 
 If you're running as a container, pass runtime configuration with `--env-file .env` or Kubernetes environment variables. The Kubernetes manifests keep the current image tags and host values while using `SIMPHONI_API_BASE_URL`, `SIMPHONI_MODEL`, `SIMPHONI_TIMEOUT_MS`, and `SIMPHONI_STREAMING_ENABLED`.
 

@@ -8,6 +8,7 @@ const DEFAULT_LOCAL_BASE_URLS = [
   'http://127.0.0.1:11435',
 ];
 const DEFAULT_MAX_ERROR_DETAIL = 500;
+let baseUrlCursor = 0;
 
 function cleanBaseUrl(value) {
   if (!value || typeof value !== 'string') return null;
@@ -122,6 +123,7 @@ function buildClientConfig(env = process.env) {
     timeoutMs: parsePositiveInteger(env.SIMPHONI_TIMEOUT_MS, DEFAULT_TIMEOUT_MS),
     streamingEnabled: parseBoolean(env.SIMPHONI_STREAMING_ENABLED, true),
     nonStreamingFallbackEnabled: parseBoolean(env.SIMPHONI_NON_STREAMING_FALLBACK, true),
+    rotateBaseUrls: parseBoolean(env.SIMPHONI_ROTATE_BASE_URLS, true),
     apiKey: env.SIMPHONI_API_KEY || env.SIMPHONI_API_TOKEN || null,
   };
 }
@@ -453,8 +455,9 @@ async function requestLanguage({ config, messages, prompt, options, onText }) {
     ? [true, ...(config.nonStreamingFallbackEnabled ? [false] : [])]
     : [false];
   const failures = [];
+  const baseUrls = orderedBaseUrls(config);
 
-  for (const baseUrl of config.baseUrls) {
+  for (const baseUrl of baseUrls) {
     for (const stream of streams) {
       const attempts = buildEndpointAttempts({
         messages,
@@ -509,6 +512,17 @@ async function requestLanguage({ config, messages, prompt, options, onText }) {
   });
 }
 
+function orderedBaseUrls(config) {
+  const baseUrls = Array.isArray(config?.baseUrls) ? config.baseUrls.slice() : [];
+  if (baseUrls.length <= 1 || config.rotateBaseUrls === false) {
+    return baseUrls;
+  }
+
+  const offset = baseUrlCursor % baseUrls.length;
+  baseUrlCursor = (baseUrlCursor + 1) % baseUrls.length;
+  return baseUrls.slice(offset).concat(baseUrls.slice(0, offset));
+}
+
 function healthMetadata(config) {
   return {
     provider: config.provider,
@@ -519,6 +533,7 @@ function healthMetadata(config) {
     base_urls: config.baseUrls.map(redactBaseUrl),
     streaming_enabled: config.streamingEnabled,
     non_streaming_fallback_enabled: config.nonStreamingFallbackEnabled,
+    rotate_base_urls: config.rotateBaseUrls,
     timeout_ms: config.timeoutMs,
     endpoints: {
       chat: ['/api/chat', '/v1/chat/completions', '/api/generate'],
@@ -538,6 +553,7 @@ module.exports = {
   extractTextFromPayload,
   healthMetadata,
   messagesToPrompt,
+  orderedBaseUrls,
   parseBoolean,
   parsePositiveInteger,
   parseStreamLine,
