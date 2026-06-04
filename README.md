@@ -24,6 +24,8 @@ Common examples:
 
 - Build and push both images for 64-bit Pis:
   `./scripts/buildx-images.sh --tag v1.0.3 --push`
+- Build and push both images to the local test registry:
+  `./scripts/buildx-local-registry.sh --tag local-test`
 - Build and push both images for 64-bit and 32-bit Pis:
   `./scripts/buildx-images.sh --tag v1.0.3 --platform linux/arm64,linux/arm/v7 --push`
 - Build only the frontend image:
@@ -37,6 +39,16 @@ Defaults:
 - Frontend image: `zaptapped/tarot-frontend`
 - Backend image: `zaptapped/my-first-container`
 - Default platform: `linux/arm64`
+
+Local registry testing:
+
+- Registry: `192.168.1.11:4443`
+- Registry mode: insecure HTTP
+- Frontend image: `192.168.1.11:4443/tarot-frontend:<tag>`
+- Backend image: `192.168.1.11:4443/my-first-container:<tag>`
+- The local registry wrapper pushes by default. Use `--no-push` to build without pushing.
+- The wrapper uses a dedicated buildx builder named `tarot-local-registry-builder`
+  and configures BuildKit to push to the registry over HTTP.
 
 # Frontend Development
 
