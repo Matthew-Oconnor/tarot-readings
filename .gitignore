@@ -29,6 +29,11 @@ yarn-error.log*
 
 # remove assets from git
 /frontend/public/waite-deck
+/frontend/public/jon-deck
 
 # remove AI junk
 .codex
+
+# my deployments are custom now
+/kubernetes
+/scripts
