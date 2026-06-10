@@ -2,6 +2,7 @@
   text-align: center;
   font-size: 48px;
   font-family: Arial, sans-serif;
+  min-height: 100vh;
 }
 
 .App-header {
@@ -17,6 +18,18 @@
 
 .App-link {
   color: #61dafb;
+}
+
+.App--spatial-embed,
+.App--spatial-embed .App-header {
+  background:
+    radial-gradient(circle at 30% 18%, rgba(96, 21, 117, 0.46), transparent 36%),
+    linear-gradient(135deg, #090611 0%, #161b29 56%, #211025 100%);
+}
+
+.App--spatial-embed .App-header {
+  min-height: 100vh;
+  overflow: hidden;
 }
 
 .fade-in {
