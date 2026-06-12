@@ -8,13 +8,44 @@ import { streamText } from './streamText';
 import { applyStreamUpdate } from './applyStreamUpdate';
 import './MainLoop.css';
 
+const TOTAL_CARDS = 78;
+const CARDS_TO_DISPLAY = 3;
+
+function createRandomSpread() {
+  const numbers = new Set();
+  const cards = [];
+
+  while (numbers.size < CARDS_TO_DISPLAY) {
+    const randomNum = Math.floor(Math.random() * TOTAL_CARDS) + 1;
+
+    if (!numbers.has(randomNum)) {
+      numbers.add(randomNum);
+      cards.push({
+        number: randomNum,
+        inverted: Math.random() < 0.5,
+      });
+    }
+  }
+
+  return cards;
+}
+
+function isGuardianRitualAutostart() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('embed') === 'spatial' && params.get('autostart') === 'guardian-ritual';
+}
+
 const MainLoop = () => {
+  const [guardianAutostart] = useState(isGuardianRitualAutostart);
   const [scene, setScene] = useState('welcome');
   const [fade, setFade] = useState(false);
   const [spreadFade, setSpreadFade] = useState(false);
   const [responseText, setResponseText] = useState('');
   const [isIntroStreaming, setIsIntroStreaming] = useState(false);
+  const [selectedCards, setSelectedCards] = useState(() => createRandomSpread());
   const introAbortRef = useRef(null);
+  const introStartTimeoutRef = useRef(null);
+  const hasStartedIntroRef = useRef(false);
 
   useEffect(() => {
     const t = setTimeout(() => setFade(true), 100);
@@ -23,6 +54,9 @@ const MainLoop = () => {
 
   useEffect(() => {
     return () => {
+      if (introStartTimeoutRef.current) {
+        clearTimeout(introStartTimeoutRef.current);
+      }
       introAbortRef.current?.abort();
     };
   }, []);
@@ -36,16 +70,28 @@ const MainLoop = () => {
     }
   }, [scene]);
 
-  const handleClick = async () => {
+  const beginIntroRitual = useCallback(({ delayMs = 2000, revealCardsImmediately = false } = {}) => {
+    if (hasStartedIntroRef.current) {
+      return;
+    }
+
+    hasStartedIntroRef.current = true;
     setFade(false);
-    setTimeout(async () => {
+    if (introStartTimeoutRef.current) {
+      clearTimeout(introStartTimeoutRef.current);
+    }
+
+    introStartTimeoutRef.current = setTimeout(async () => {
+      introStartTimeoutRef.current = null;
       introAbortRef.current?.abort();
       const controller = new AbortController();
       introAbortRef.current = controller;
 
+      setSelectedCards(createRandomSpread());
       setResponseText('');
-      setScene('prompt');
+      setScene(revealCardsImmediately ? 'fan-cards' : 'prompt');
       setFade(true);
+      setSpreadFade(revealCardsImmediately);
       setIsIntroStreaming(true);
 
       try {
@@ -69,12 +115,26 @@ const MainLoop = () => {
           setIsIntroStreaming(false);
         }
       }
-    }, 2000);
+    }, delayMs);
+  }, []);
+
+  useEffect(() => {
+    if (guardianAutostart) {
+      beginIntroRitual({ delayMs: 0, revealCardsImmediately: true });
+    }
+  }, [beginIntroRitual, guardianAutostart]);
+
+  const handleClick = () => {
+    beginIntroRitual();
   };
 
   // stable callback (identity doesn't change)
   const handleFinishTyping = useCallback(() => {
     setScene('fan-cards');
+  }, []);
+
+  const shuffleCards = useCallback(() => {
+    setSelectedCards(createRandomSpread());
   }, []);
 
   const startTheSpread = useCallback(() => {
@@ -93,7 +153,7 @@ const MainLoop = () => {
 
   return (
     <div className={`MainLoop-container ${fade ? 'fade-in' : 'fade-out'}`}>
-      {scene === 'welcome' && (
+      {scene === 'welcome' && !guardianAutostart && (
         <Button onClick={handleClick} fade={fade}>
           Hello traveler...
         </Button>
@@ -108,11 +168,18 @@ const MainLoop = () => {
             // only trigger transition when in 'prompt'
             onTypingComplete={scene === 'prompt' ? handleFinishTyping : undefined}
           />
-          <RandomCardsPrompt fade={spreadFade} startTheSpread={startTheSpread} />
+          <RandomCardsPrompt
+            fade={spreadFade}
+            selectedCards={selectedCards}
+            onShuffleCards={shuffleCards}
+            startTheSpread={startTheSpread}
+          />
         </>
       )}
 
-      {scene === 'classic-spread' && <ClassicSpread />}
+      {scene === 'classic-spread' && (
+        <ClassicSpread selectedCards={selectedCards} onShuffleCards={shuffleCards} />
+      )}
     </div>
   );
 };

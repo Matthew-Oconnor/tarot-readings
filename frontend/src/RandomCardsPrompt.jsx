@@ -7,8 +7,14 @@ import cardsData from './cards.json';
 const TOTAL_CARDS = 78; // Total number of cards in the deck
 const CARDS_TO_DISPLAY = 3; // Number of cards to display
 
-function RandomCardsPrompt({ fade, startTheSpread }) { // Accept fade prop
-  const [selectedCards, setSelectedCards] = useState([]);
+function getCardNumber(card) {
+  return typeof card === 'number' ? card : card?.number;
+}
+
+function RandomCardsPrompt({ fade, selectedCards: selectedCardsProp, onShuffleCards, startTheSpread }) {
+  const [fallbackSelectedCards, setFallbackSelectedCards] = useState([]);
+  const hasParentCards = Array.isArray(selectedCardsProp);
+  const selectedCards = hasParentCards ? selectedCardsProp : fallbackSelectedCards;
 
   // Function to generate three unique random numbers between 1 and TOTAL_CARDS
   const generateUniqueRandomNumbers = useCallback(() => {
@@ -23,52 +29,52 @@ function RandomCardsPrompt({ fade, startTheSpread }) { // Accept fade prop
   // Function to select three random cards
   const selectRandomCards = useCallback(() => {
     const randomNumbers = generateUniqueRandomNumbers();
-    setSelectedCards(randomNumbers);
+    setFallbackSelectedCards(randomNumbers);
   }, [generateUniqueRandomNumbers]);
 
   // Select random cards on component mount
   useEffect(() => {
-    selectRandomCards();
-  }, [selectRandomCards]);
+    if (!hasParentCards && fallbackSelectedCards.length === 0) {
+      selectRandomCards();
+    }
+  }, [fallbackSelectedCards.length, hasParentCards, selectRandomCards]);
 
   // Helper function to get card data by number
   const getCardData = (cardNumber) => {
     return cardsData.find((card) => card.number === cardNumber);
   };
 
+  const handleShuffleCards = () => {
+    if (onShuffleCards) {
+      onShuffleCards();
+      return;
+    }
+
+    selectRandomCards();
+  };
+
   return (
     <div className={`random-cards-container ${fade ? 'fade-in' : 'fade-out'}`}>
       <div className="cards-display">
-        <div className="one-card">
-          {selectedCards[0] && (
-            <img
-              src={`/waite-deck/card${selectedCards[0]}.jpg`}
-              alt={`${getCardData(selectedCards[0]).name}`}
-              className="card-image"
-            />
-          )}
-        </div>
-        <div className="one-card">
-          {selectedCards[1] && (
-            <img
-              src={`/waite-deck/card${selectedCards[1]}.jpg`}
-              alt={`${getCardData(selectedCards[1]).name}`}
-              className="card-image"
-            />
-          )}
-        </div>
-        <div className="one-card">
-          {selectedCards[2] && (
-            <img
-              src={`/waite-deck/card${selectedCards[2]}.jpg`}
-              alt={`${getCardData(selectedCards[2]).name}`}
-              className="card-image"
-            />
-          )}
-        </div>
+        {selectedCards.slice(0, CARDS_TO_DISPLAY).map((card, index) => {
+          const cardNumber = getCardNumber(card);
+          const cardData = getCardData(cardNumber);
+
+          return (
+            <div className="one-card" key={`${cardNumber || 'card'}-${index}`}>
+              {cardNumber && (
+                <img
+                  src={`/waite-deck/card${cardNumber}.jpg`}
+                  alt={`${cardData?.name || `Card ${cardNumber}`}`}
+                  className="card-image"
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
       {/* Optional: Button to refresh the cards */}
-      <button className="refresh-button" onClick={selectRandomCards}>
+      <button className="refresh-button" onClick={handleShuffleCards}>
         Shuffle Cards
       </button>
       <button className="refresh-button" onClick={startTheSpread}>

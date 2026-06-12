@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import './ClassicSpread.css';
 import cardsData from './cards.json';
 import ResponseContainer from './ResponseContainer';
@@ -8,13 +8,18 @@ import { applyStreamUpdate } from './applyStreamUpdate';
 const TOTAL_CARDS = 78; // Total number of cards in the deck
 const CARDS_TO_DISPLAY = 3; // Number of cards to display
 
-const ClassicSpread = () => {
+const ClassicSpread = ({ selectedCards: selectedCardsProp, onShuffleCards } = {}) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [selectedCards, setSelectedCards] = useState([]);
+  const [internalSelectedCards, setInternalSelectedCards] = useState([]);
   const [responseText, setResponseText] = useState('');
   const [isResponseStreaming, setIsResponseStreaming] = useState(false);
   const [showReturnButton, setshowReturnButton] = useState(false); // State to control button visibility
   const streamAbortRef = useRef(null);
+  const hasProvidedCards = Array.isArray(selectedCardsProp) && selectedCardsProp.length > 0;
+  const selectedCards = useMemo(
+    () => (hasProvidedCards ? selectedCardsProp.slice(0, CARDS_TO_DISPLAY) : internalSelectedCards),
+    [hasProvidedCards, internalSelectedCards, selectedCardsProp]
+  );
 
   const generateUniqueRandomCards = useCallback(() => {
     const numbers = new Set();
@@ -38,7 +43,7 @@ const ClassicSpread = () => {
   const selectRandomCards = useCallback(() => {
     streamAbortRef.current?.abort();
     const randomCards = generateUniqueRandomCards();
-    setSelectedCards(randomCards);
+    setInternalSelectedCards(randomCards);
     setResponseText(''); // Clear previous response when reshuffling
     setIsResponseStreaming(false);
     setshowReturnButton(false); // Hide the button when reshuffling
@@ -49,19 +54,21 @@ const ClassicSpread = () => {
       setIsVisible(true);
     }, 100); // Delay to ensure the transition occurs
 
-    selectRandomCards();
+    if (!hasProvidedCards) {
+      selectRandomCards();
+    }
 
     return () => {
       clearTimeout(fadeInTimeout);
       streamAbortRef.current?.abort();
     };
-  }, [selectRandomCards]);
+  }, [hasProvidedCards, selectRandomCards]);
 
   const getCardData = (cardNumber) => {
     return cardsData.find((card) => card.number === cardNumber);
   };
 
-  const generateSpreadInterpretation = useCallback(async () => {
+  const generateSpreadInterpretation = useCallback(async (cardsForSpread) => {
     streamAbortRef.current?.abort();
     const controller = new AbortController();
     streamAbortRef.current = controller;
@@ -72,7 +79,7 @@ const ClassicSpread = () => {
 
     try {
       await streamText('/api/psychic/spread/stream', {
-        body: { cards: selectedCards },
+        body: { cards: cardsForSpread },
         signal: controller.signal,
         onChunk: (_chunk, fullText) => {
           applyStreamUpdate(setResponseText, fullText);
@@ -91,13 +98,27 @@ const ClassicSpread = () => {
         setIsResponseStreaming(false);
       }
     }
-  }, [selectedCards]);
+  }, []);
 
   useEffect(() => {
     if (selectedCards.length === CARDS_TO_DISPLAY) {
-      generateSpreadInterpretation();
+      generateSpreadInterpretation(selectedCards);
     }
   }, [generateSpreadInterpretation, selectedCards]);
+
+  const requestNewReading = useCallback(() => {
+    streamAbortRef.current?.abort();
+    setResponseText('');
+    setIsResponseStreaming(false);
+    setshowReturnButton(false);
+
+    if (hasProvidedCards && onShuffleCards) {
+      onShuffleCards();
+      return;
+    }
+
+    selectRandomCards();
+  }, [hasProvidedCards, onShuffleCards, selectRandomCards]);
 
   // Callback for when typing is complete
   const handleTypingComplete = () => {
@@ -135,7 +156,7 @@ const ClassicSpread = () => {
       {showReturnButton && (
         <button
           className="reshuffle-button"
-          onClick={selectRandomCards}
+          onClick={requestNewReading}
           style={{ position: 'absolute', right: '20px', top: '50%' }}
         >
           Give me a new reading!

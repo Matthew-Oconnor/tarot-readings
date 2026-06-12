@@ -23,13 +23,13 @@
 .App--spatial-embed,
 .App--spatial-embed .App-header {
   background:
-    radial-gradient(circle at 30% 18%, rgba(96, 21, 117, 0.46), transparent 36%),
-    linear-gradient(135deg, #090611 0%, #161b29 56%, #211025 100%);
+    linear-gradient(145deg, rgba(7, 16, 20, 0.96) 0%, rgba(18, 17, 31, 0.94) 52%, rgba(31, 22, 18, 0.96) 100%);
 }
 
 .App--spatial-embed .App-header {
   min-height: 100vh;
   overflow: hidden;
+  color: #f7f1d0;
 }
 
 .fade-in {

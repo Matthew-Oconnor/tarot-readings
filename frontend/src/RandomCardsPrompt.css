@@ -46,3 +46,57 @@
   transform: scale(1.2);  /* Slightly enlarges on hover */
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);  /* Adds shadow effect on hover */
 }
+
+.App--spatial-embed .random-cards-container {
+  width: min(94vw, 980px);
+  margin: 0 auto;
+}
+
+.App--spatial-embed .cards-display {
+  align-items: center;
+  gap: clamp(14px, 4vw, 46px);
+  margin-top: 24px;
+  perspective: 1200px;
+}
+
+.App--spatial-embed .one-card {
+  width: clamp(124px, 17vw, 190px);
+  transform: translateY(-8px);
+  animation: spatial-card-hover 4.8s ease-in-out infinite;
+  box-shadow:
+    0 18px 48px rgba(18, 244, 218, 0.18),
+    0 8px 24px rgba(0, 0, 0, 0.42);
+}
+
+.App--spatial-embed .one-card:nth-child(2) {
+  animation-delay: -1.4s;
+}
+
+.App--spatial-embed .one-card:nth-child(3) {
+  animation-delay: -2.8s;
+}
+
+.App--spatial-embed .one-card .card-image {
+  border-color: #d6b45b;
+  box-shadow:
+    0 0 0 1px rgba(119, 234, 214, 0.35),
+    0 14px 40px rgba(0, 0, 0, 0.36);
+}
+
+.App--spatial-embed .refresh-button {
+  border: 1px solid rgba(214, 180, 91, 0.72);
+  border-radius: 999px;
+  background: rgba(13, 24, 30, 0.88);
+  color: #f7f1d0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+@keyframes spatial-card-hover {
+  0%,
+  100% {
+    transform: translateY(-8px) rotateX(1deg);
+  }
+  50% {
+    transform: translateY(-22px) rotateX(3deg);
+  }
+}

@@ -41,6 +41,19 @@
   animation: blink 1s steps(1, end) infinite;
 }
 
+.App--spatial-embed .Response-container {
+  width: min(88vw, 820px);
+  border: 1px solid rgba(214, 180, 91, 0.44);
+  border-radius: 8px;
+  background-color: rgba(8, 14, 18, 0.78);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.34);
+  color: #f7f1d0;
+}
+
+.App--spatial-embed .Response-text {
+  color: #f7f1d0;
+}
+
 .fade-in {
   opacity: 1;
 }
