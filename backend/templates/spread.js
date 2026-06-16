@@ -5,9 +5,11 @@ const CARDS = require('../data/cards.json');
 function resolveCards(cards = []) {
   return cards.slice(0, 3).map((c, idx) => {
     const meta = CARDS.find((x) => x.number === c.number);
+    const suppliedName = typeof c.name === 'string' ? c.name.trim() : '';
+    const suppliedPosition = typeof c.position === 'string' ? c.position.trim() : '';
     return {
-      position: ['The Past', 'The Present', 'The Future'][idx] || `Pos${idx + 1}`,
-      name: meta?.name || `Card ${c.number}`,
+      position: suppliedPosition || ['The Past', 'The Present', 'The Future'][idx] || `Pos${idx + 1}`,
+      name: suppliedName || meta?.name || `Card ${c.number}`,
       inverted: !!c.inverted,
       // add more meta if your prompt needs it (keywords/description)
     };
@@ -43,6 +45,8 @@ Structure:
 - Connect the three cards into a cohesive emotional or developmental arc.
 
 Card Handling:
+- Use exactly the three supplied cards in their supplied order and positions.
+- Do not redraw, substitute, rename, reorder, or mention any card that is not listed in the spread.
 - Upright: express balanced or flowing energy.
 - Inverted: frame as blocked, internalized, delayed, misdirected, or calling for integration — not “bad”.
 - Avoid simplistic positive/negative labeling.
@@ -62,6 +66,7 @@ Constraints:
       ...resolved.map(
         (c) => `${c.position}: "${c.name}" (${c.inverted ? 'Inverted' : 'Upright'}).`
       ),
+      `Card lock: only discuss ${resolved.map((c) => `"${c.name}" as ${c.position}`).join(', ')}.`,
       'The querent is seeking something; infer gently without inventing specifics.',
       'Offer a cohesive arc that connects the three positions.',
     ].join(' ')

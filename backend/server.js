@@ -10,10 +10,10 @@ const { psychicSpread } = require('./templates/spread');
 const app = express();
 const port = process.env.PORT || 5001;
 
-// These names are “OPENAI_*” but you’re actually targeting Ollama.
-// Keep env names for compatibility with deployments.
-const MODEL = process.env.CURRENT_MODEL || 'tinyllama';
-const OLLAMA_BASE_URL = (process.env.OPENAI_BASE_URL || 'http://itworksonmymachine:11434').replace(/\/$/, '');
+// Keep legacy OPENAI_* names, but prefer the Simphoni Apex launchd contract.
+const MODEL = process.env.SIMPHONI_MODEL || process.env.CURRENT_MODEL || 'tinyllama';
+const LANGUAGE_BASE_URLS = resolveLanguageBaseUrls();
+const OLLAMA_BASE_URL = LANGUAGE_BASE_URLS[0];
 
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
@@ -35,9 +35,40 @@ function messagesToPrompt(messages) {
     .concat('\nASSISTANT:');
 }
 
-function createOllamaClient() {
+function splitUrlList(raw) {
+  return String(raw || '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function normalizeBaseUrl(raw) {
+  const value = String(raw || '').trim();
+  if (!value) return null;
+  return value.replace(/\/+$/, '');
+}
+
+function resolveLanguageBaseUrls() {
+  const candidates = [
+    process.env.OPENAI_BASE_URL,
+    process.env.SIMPHONI_API_BASE_URL,
+    ...splitUrlList(process.env.SIMPHONI_FALLBACK_BASE_URLS),
+    'http://127.0.0.1:20821',
+    'http://127.0.0.1:11434',
+  ];
+  const seen = new Set();
+  return candidates
+    .map(normalizeBaseUrl)
+    .filter((url) => {
+      if (!url || seen.has(url)) return false;
+      seen.add(url);
+      return true;
+    });
+}
+
+function createOllamaClient(baseURL) {
   return axios.create({
-    baseURL: OLLAMA_BASE_URL,
+    baseURL,
     timeout: 60_000,
     headers: { 'Content-Type': 'application/json' },
     // Don’t throw automatically so we can inspect body on non-2xx.
@@ -56,71 +87,70 @@ async function readStreamBody(stream) {
 }
 
 function buildOllamaRequest({ model, messages, prompt, options, stream = false }) {
-  if (Array.isArray(messages)) {
-    return {
-      endpoint: '/api/chat',
-      body: {
-        model,
-        messages,
-        stream,
-        options: options || undefined,
-      },
-      mode: 'chat',
-    };
-  }
-
   return {
-    endpoint: '/api/generate',
+    endpoint: '/api/chat',
     body: {
       model,
-      prompt: typeof prompt === 'string' ? prompt : messagesToPrompt(messages),
+      messages: Array.isArray(messages)
+        ? messages
+        : [{ role: 'user', content: typeof prompt === 'string' ? prompt : messagesToPrompt(messages) }],
       stream,
       options: options || undefined,
     },
-    mode: 'generate',
+    mode: 'chat',
   };
 }
 
+function extractLanguageText(data, { trim = true } = {}) {
+  const text = (
+    data?.message?.content ||
+    data?.response ||
+    data?.choices?.[0]?.message?.content ||
+    data?.choices?.[0]?.delta?.content ||
+    data?.choices?.[0]?.text ||
+    ''
+  );
+  const value = typeof text === 'string' ? text : String(text || '');
+  return trim ? value.trim() : value;
+}
+
+async function postLanguageRequest(request, options = {}) {
+  let lastError = null;
+  for (const baseURL of LANGUAGE_BASE_URLS) {
+    const client = createOllamaClient(baseURL);
+    try {
+      const response = await client.post(request.endpoint, request.body, options);
+      if (response.status < 200 || response.status >= 300) {
+        const err = new Error(`Language ${request.endpoint} failed: ${response.status}`);
+        err.status = response.status;
+        err.detail = response.data || response.statusText;
+        throw err;
+      }
+      return { response, baseURL };
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError || new Error('language_service_unavailable');
+}
+
 /**
- * Call Ollama in a non-streaming way and return a clean text response.
- *
- * Uses /api/chat if you provide messages.
- * Falls back to /api/generate by converting messages -> prompt.
+ * Call the configured local language service and return a clean text response.
  */
 async function ollamaRequest({ model, messages, prompt, options }) {
-  const client = createOllamaClient();
   const request = buildOllamaRequest({ model, messages, prompt, options, stream: false });
-  const r = await client.post(request.endpoint, request.body);
+  const { response: r, baseURL } = await postLanguageRequest(request);
 
-  if (r.status < 200 || r.status >= 300) {
-    const detail = r.data || r.statusText;
-    const err = new Error(`Ollama ${request.endpoint} failed: ${r.status}`);
-    err.status = r.status;
-    err.detail = detail;
-    throw err;
-  }
+  const text = extractLanguageText(r.data);
 
-  const text = request.mode === 'chat'
-    ? (r.data?.message?.content ?? '').trim()
-    : (r.data?.response ?? '').trim();
-
-  return { text, raw: r.data, mode: request.mode };
+  return { text, raw: r.data, mode: request.mode, baseURL };
 }
 
 async function ollamaStreamText({ req, res, model, messages, prompt, options }) {
-  const client = createOllamaClient();
   const request = buildOllamaRequest({ model, messages, prompt, options, stream: true });
-  const r = await client.post(request.endpoint, request.body, {
+  const { response: r } = await postLanguageRequest(request, {
     responseType: 'stream',
   });
-
-  if (r.status < 200 || r.status >= 300) {
-    const detail = await readStreamBody(r.data);
-    const err = new Error(`Ollama ${request.endpoint} failed: ${r.status}`);
-    err.status = r.status;
-    err.detail = detail || r.statusText;
-    throw err;
-  }
 
   res.status(200);
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -156,10 +186,12 @@ async function ollamaStreamText({ req, res, model, messages, prompt, options }) 
     for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed) continue;
+      const jsonLine = trimmed.startsWith('data:') ? trimmed.slice(5).trim() : trimmed;
+      if (!jsonLine || jsonLine === '[DONE]') continue;
 
       let parsed;
       try {
-        parsed = JSON.parse(trimmed);
+        parsed = JSON.parse(jsonLine);
       } catch (err) {
         console.error('[StreamParseError]', {
           endpoint: request.endpoint,
@@ -169,10 +201,7 @@ async function ollamaStreamText({ req, res, model, messages, prompt, options }) 
         continue;
       }
 
-      const text = request.mode === 'chat'
-        ? parsed?.message?.content
-        : parsed?.response;
-
+      const text = extractLanguageText(parsed, { trim: false });
       if (text) {
         res.write(text);
       }
@@ -182,10 +211,9 @@ async function ollamaStreamText({ req, res, model, messages, prompt, options }) 
   const trailing = buffer.trim();
   if (trailing) {
     try {
-      const parsed = JSON.parse(trailing);
-      const text = request.mode === 'chat'
-        ? parsed?.message?.content
-        : parsed?.response;
+      const jsonLine = trailing.startsWith('data:') ? trailing.slice(5).trim() : trailing;
+      const parsed = jsonLine && jsonLine !== '[DONE]' ? JSON.parse(jsonLine) : null;
+      const text = extractLanguageText(parsed, { trim: false });
 
       if (text) {
         res.write(text);
@@ -285,6 +313,8 @@ app.post('/api/psychic/spread', async (req, res) => {
 
     const normalized = cards.slice(0, 3).map((c) => ({
       number: Number(c?.number),
+      name: typeof c?.name === 'string' ? c.name.trim() : undefined,
+      position: typeof c?.position === 'string' ? c.position.trim() : undefined,
       inverted: !!c?.inverted,
     }));
 
@@ -328,6 +358,8 @@ app.post('/api/psychic/spread/stream', async (req, res) => {
 
     const normalized = cards.slice(0, 3).map((c) => ({
       number: Number(c?.number),
+      name: typeof c?.name === 'string' ? c.name.trim() : undefined,
+      position: typeof c?.position === 'string' ? c.position.trim() : undefined,
       inverted: !!c?.inverted,
     }));
 
@@ -362,11 +394,12 @@ app.post('/api/psychic/spread/stream', async (req, res) => {
 
 app.get('/healthz', async (req, res) => {
   // lightweight health check (doesn't require the model to run)
-  return res.json({ ok: true, ollama: OLLAMA_BASE_URL, model: MODEL });
+  return res.json({ ok: true, ollama: OLLAMA_BASE_URL, model: MODEL, baseUrls: LANGUAGE_BASE_URLS });
 });
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
   console.log(`Ollama base: ${OLLAMA_BASE_URL}`);
+  console.log(`Language base URLs: ${LANGUAGE_BASE_URLS.join(', ')}`);
   console.log(`Model: ${MODEL}`);
 });
